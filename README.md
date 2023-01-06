@@ -26,8 +26,7 @@ We plan to use the [BIRDS 450 SPECIES - IMAGE CLASSIFICATION](https://www.kaggle
 
 
 ### Deep learning models
-We expect to use the [Vision Transformer (ViT)](https://huggingface.co/docs/transformers/model_doc/vit) model, which is a deep learning model and is a transformer that is targeted at vision processing tasks such as image recognition. pre-trained models and mainly ViT for the preprocess, to process an image into tensor, also the image transformation phase, to make
-the model most robust against overfitting, and finally the training.
+We expect to use the [Vision Transformer (ViT)](https://huggingface.co/docs/transformers/model_doc/vit) model, which is a deep learning model and is a transformer that is targeted at vision processing tasks such as image recognition. 
 
 We might as well also try the [BERT Pre-Training of Image Transformers (BEiT)](https://huggingface.co/docs/transformers/v4.25.1/en/model_doc/beit) and/or [Data-efficient Image Transformers (DeiT)](https://huggingface.co/docs/transformers/v4.25.1/en/model_doc/deit) models, which are follow-up works on the original ViT model.
 
