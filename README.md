@@ -10,20 +10,25 @@ Team 31 members:
 - Orfeas Athanasiadis Salales s212584
 
 ### Overall goal
-The goal of the project is to fine a tune a deep learning model based on [Vision Transformer (ViT)](https://huggingface.co/docs/transformers/model_doc/vit)
+The goal of the project is to fine tune a deep learning model based on [Vision Transformer (ViT)](https://huggingface.co/docs/transformers/model_doc/vit)
  that classifies bird species.
  
-### Framework used
-We used the tranformer framework from [Huggingface](https://huggingface.co/). Specifically, we used the Vision Transformer based on the paper:
+### Framework
+We plan to use the tranformer framework from [Huggingface](https://huggingface.co/). Specifically, use the Vision Transformer based on the paper:
 
 [An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/abs/2010.11929).
 
-### Data used for finetuning
-We used the [BIRDS 450 SPECIES - IMAGE CLASSIFICATION](https://www.kaggle.com/datasets/gpiosenka/100-bird-species) dataset from Kaggle.
+### How to include the framework
+We want to use the Transformers framework that includes many pretrained models, which we intend to use in order to transfer learn and train on our dataset.
 
-### Deep learning models used
-We will use transformers pre-trained models and mainly ViT for the preprocess, to process an image into tensor, also the image transformation phase, to make
-the model most robust against overfitting, and finally the training.
+### Dataset
+We plan to use the [BIRDS 450 SPECIES - IMAGE CLASSIFICATION](https://www.kaggle.com/datasets/gpiosenka/100-bird-species) dataset from Kaggle. This is a dataset containing 80762 images (76262 train, 2250 test, 2250 validation) of size 224 X 224. The images are of birds within 450 species.
+
+
+### Deep learning models
+We expect to use the [Vision Transformer (ViT)](https://huggingface.co/docs/transformers/model_doc/vit) model, which is a deep learning model and is a transformer that is targeted at vision processing tasks such as image recognition. 
+
+We might as well also try the [BERT Pre-Training of Image Transformers (BEiT)](https://huggingface.co/docs/transformers/v4.25.1/en/model_doc/beit) and/or [Data-efficient Image Transformers (DeiT)](https://huggingface.co/docs/transformers/v4.25.1/en/model_doc/deit) models, which are follow-up works on the original ViT model.
 
 ### Checklist
 See [CHECKLIST.md](https://github.com/manganas/mlops_project_2023/blob/main/CHECKLIST.md)
