@@ -2,10 +2,9 @@
 import csv
 import logging
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import List, Tuple
 
 import click
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from dotenv import find_dotenv, load_dotenv
@@ -33,7 +32,7 @@ class BirdsDataset(Dataset):
                 self.load_preprocessed()
                 print(f"Loaded preprocessed {data_type} data")
                 return
-            except:  # FileNotFoundError probably
+            except FileNotFoundError:
                 print(f"No preprocesed data found for {data_type} set. Generating...")
                 pass
 
@@ -123,8 +122,13 @@ def main(input_filepath, output_filepath):
     logger.info("making final data set from raw data")
 
     train = BirdsDataset(input_filepath, output_filepath, "train")
+    train.save_preprocessed()
+
     test = BirdsDataset(input_filepath, output_filepath, "test")
+    test.save_preprocessed()
+
     validation = BirdsDataset(input_filepath, output_filepath, "valid")
+    validation.save_preprocessed()
 
 
 if __name__ == "__main__":
