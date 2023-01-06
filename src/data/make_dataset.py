@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
-import click
+import csv
 import logging
 from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
+from typing import Callable, List, Optional, Tuple, Union
 
-from typing import Union, Callable, Optional, List, Tuple
-
+import click
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
+from dotenv import find_dotenv, load_dotenv
+from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-
-import csv
-
-from PIL import Image
-
-import matplotlib.pyplot as plt
 
 
 class BirdsDataset(Dataset):
@@ -34,13 +31,13 @@ class BirdsDataset(Dataset):
         if out_folder:
             try:
                 self.load_preprocessed()
-                print("Loaded preprocessed data")
+                print(f"Loaded preprocessed {data_type} data")
                 return
             except:  # FileNotFoundError probably
-                print("No preprocesed data found. Generating...")
+                print(f"No preprocesed data found for {data_type} set. Generating...")
                 pass
 
-        self.image_paths, self.targets = self.read_raw_data()
+        image_paths, self.targets = self.read_raw_data()
 
         means = (0.0, 0.0, 0.0)
         stds = (1.0, 1.0, 1.0)
@@ -48,7 +45,16 @@ class BirdsDataset(Dataset):
             [transforms.ToTensor(), transforms.Normalize(means, stds)]
         )
 
-        self.create_tensors()
+        self.data = self.create_tensors(image_paths)
+
+        if out_folder:
+            self.save_preprocessed()
+
+    def save_preprocessed(self):
+        torch.save(
+            [self.data, self.targets],
+            f"{self.out_folder}/{self.data_type}_processed.pt",
+        )
 
     def load_preprocessed(self) -> None:
         self.images, self.targets = torch.load(
@@ -56,9 +62,9 @@ class BirdsDataset(Dataset):
         )
         return
 
-    def create_tensors(self):
+    def create_tensors(self, image_paths: List[str]) -> torch.Tensor:
         content = []
-        for image_path in self.image_paths:
+        for image_path in image_paths:
 
             # Read image using PIL Image
             img = Image.open(self.in_folder + "/" + image_path)
@@ -69,12 +75,13 @@ class BirdsDataset(Dataset):
 
             # Save it in a tensor alongside the corresponding target
 
-        imgs_tensor = torch.cat(content, 0)
+        data = torch.cat(content, 0)
 
-        print(f"{len(content)} images")
-        print(f"Images tensor shape: {imgs_tensor.shape}")
+        print(f"{self.data_type.title()} images tensor shape: {data.shape}")
 
-    def read_raw_data(self):
+        return data
+
+    def read_raw_data(self) -> Tuple[List[str], torch.Tensor]:
         try:
             with open(f"{self.in_folder}/birds.csv", "r") as f:
                 all_birds_csv = csv.reader(f)
@@ -86,8 +93,10 @@ class BirdsDataset(Dataset):
                     if line_[-1] == self.data_type:
                         image_paths.append(line_[1])
 
-                        # Use Linean scientific nomeclature for targets. Use line_[2] for common names (in capital)
-                        targets.append(line_[3])
+                        # Encoded. Use the birds csv to translate class to common name or species
+                        targets.append(int(line_[0]))
+
+                targets = torch.tensor(np.array(targets)).reshape(-1, 1)
 
                 return image_paths, targets
 
@@ -97,10 +106,10 @@ class BirdsDataset(Dataset):
             return None, None
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        pass
+        return self.data[idx, :, :, :], self.targets[idx]
 
     def __len__(self) -> int:
-        pass
+        return self.data.shape[0]
 
 
 @click.command()
@@ -113,8 +122,8 @@ def main(input_filepath, output_filepath):
     logger = logging.getLogger(__name__)
     logger.info("making final data set from raw data")
 
-    # train = BirdsDataset(input_filepath, output_filepath, "train")
-    # test = BirdsDataset(input_filepath, output_filepath, "test")
+    train = BirdsDataset(input_filepath, output_filepath, "train")
+    test = BirdsDataset(input_filepath, output_filepath, "test")
     validation = BirdsDataset(input_filepath, output_filepath, "valid")
 
 
