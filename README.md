@@ -9,6 +9,17 @@ Team 31 members:
 - Ioannis Manganas s220493
 - Orfeas Athanasiadis Salales s212584
 
+### Overall goal
+The goal of the project is to fine a tune a deep learning model based on [Vision Transformer (ViT)](https://huggingface.co/docs/transformers/model_doc/vit)
+ that classifies bird species.  
+ 
+### Framework used
+We used the tranformer framework from [Huggingface](https://huggingface.co/). Specifically, we used the Vision Transformer based on the paper:  
+
+[An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/abs/2010.11929).  
+
+### Data used for finetuning
+We used the [BIRDS 450 SPECIES - IMAGE CLASSIFICATION](https://www.kaggle.com/datasets/gpiosenka/100-bird-species) dataset from Kaggle.
 
 Project Organization
 ------------
