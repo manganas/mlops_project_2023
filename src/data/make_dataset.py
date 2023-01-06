@@ -70,7 +70,7 @@ class BirdsDataset(Dataset):
             # Save it in a tensor alongside the corresponding target
 
         imgs_tensor = torch.cat(content, 0)
-        # one-hot encoding
+
         print(f"{len(content)} images")
         print(f"Images tensor shape: {imgs_tensor.shape}")
 
