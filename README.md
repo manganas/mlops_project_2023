@@ -25,7 +25,7 @@ We used the [BIRDS 450 SPECIES - IMAGE CLASSIFICATION](https://www.kaggle.com/da
 We will use transformers pre-trained models and mainly ViT for the preprocess, to process an image into tensor, also the image transformation phase, to make
 the model most robust against overfitting, and finally the training.
 
-###Checklist
+### Checklist
 See [CHECKLIST.md](https://github.com/manganas/mlops_project_2023/blob/main/CHECKLIST.md)
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
