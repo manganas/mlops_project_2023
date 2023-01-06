@@ -1,3 +1,5 @@
+wrapt
+packaging
 # local package
 -e .
 
