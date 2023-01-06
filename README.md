@@ -1,7 +1,14 @@
-mlops_project_2023
+Bird species image classification using Vision Transformer 
 ==============================
 
-Bird species classification project for the course Machine Learning Operations at DTU.
+This repository contains the project work of Team 31 for the DTU course [Machine Learning Operations](https://kurser.dtu.dk/course/02476) for the year 2023.
+
+Team 31 members:  
+- Charidimos Vradis s212441
+- Georgios Panagiotopoulos s223306
+- Ioannis Manganas s220493
+- Orfeas Athanasiadis Salales s212584
+
 
 Project Organization
 ------------
