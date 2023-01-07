@@ -15,7 +15,7 @@ Pillow==9.4.0
 python-dotenv==0.21.0
 setuptools==65.6.3
 torch==1.13.0
-torchvision==0.14.0a0+2ba5a5d
+torchvision
 pytorch_lightning==1.8.1
 torchmetrics==0.11.0
 transformers==4.24.0
