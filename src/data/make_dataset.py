@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import csv
 import logging
 from pathlib import Path
 from typing import List, Tuple
@@ -8,127 +7,77 @@ import click
 import numpy as np
 import torch
 from dotenv import find_dotenv, load_dotenv
-from PIL import Image
-from torch.utils.data import Dataset
 from torchvision import transforms
+from torchvision.datasets import ImageFolder
 
 
-class BirdsDataset(Dataset):
-    """
-    Class that preprocesses the Birds dataset from Kaggle:
+class BirdsDataset:
+    def __init__(self, input_filepath: str, data_type: str) -> None:
 
-    """
-
-    def __init__(self, in_folder: str, out_folder: str, data_type: str) -> None:
-        super(BirdsDataset, self).__init__()
-
+        self.input_filepath = input_filepath
         self.data_type = data_type
 
-        self.in_folder = in_folder
-        self.out_folder = out_folder
+        self.ds = ImageFolder(input_filepath + "/" + data_type)
 
-        if out_folder:
-            try:
-                self.load_preprocessed()
-                print(f"Loaded preprocessed {data_type} data")
-                return
-            except FileNotFoundError:
-                print(f"No preprocesed data found for {data_type} set. Generating...")
-                pass
+        self.label2id = {}
+        self.id2label = {}
 
-        image_paths, self.targets = self.read_raw_data()
+        for i, class_name in enumerate(self.ds.classes):
+            self.label2id[class_name] = str(i)
+            self.id2label[str(i)] = class_name
 
-        means = (0.0, 0.0, 0.0)
-        stds = (1.0, 1.0, 1.0)
+        means = (0.0) * 3
+        stds = (1.0) * 3
+
         self.transform = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize(means, stds)]
         )
 
-        self.data = self.create_tensors(image_paths)
+    def save_ds(self, output_filepath: str) -> None:
+        imgs_tsnr = []
+        labels_tsnr = []
+        for data_point in self.ds:
+            imgs_tsnr.append(self.transform(data_point[0]))
+            labels_tsnr.append(data_point[1])
 
-        if out_folder:
-            self.save_preprocessed()
-
-    def save_preprocessed(self):
+        labels_tsnr = torch.from_numpy(np.array(labels_tsnr))
+        imgs_tsnr = torch.stack(imgs_tsnr, 0)
         torch.save(
-            [self.data, self.targets],
-            f"{self.out_folder}/{self.data_type}_processed.pt",
+            [imgs_tsnr, labels_tsnr],
+            output_filepath + "/" + self.data_type + "_processed.pt",
         )
 
-    def load_preprocessed(self) -> None:
-        self.images, self.targets = torch.load(
-            self.out_folder + "/" + self.data_type + "_processed.pt"
-        )
-        return
 
-    def create_tensors(self, image_paths: List[str]) -> torch.Tensor:
-        content = []
-        for image_path in image_paths:
+class ImageClassificationCollator:
+    def __init__(self, feature_extractor):
+        self.feature_extractor = feature_extractor
 
-            # Read image using PIL Image
-            img = Image.open(self.in_folder + "/" + image_path)
-
-            # Pass the PIL image through the transformation
-            img = self.transform(img)
-            content.append(img.view(1, *img.shape))
-
-            # Save it in a tensor alongside the corresponding target
-
-        data = torch.cat(content, 0)
-
-        print(f"{self.data_type.title()} images tensor shape: {data.shape}")
-
-        return data
-
-    def read_raw_data(self) -> Tuple[List[str], torch.Tensor]:
-        try:
-            with open(f"{self.in_folder}/birds.csv", "r") as f:
-                all_birds_csv = csv.reader(f)
-
-                image_paths = []
-                targets = []
-
-                for line_ in all_birds_csv:
-                    if line_[-1] == self.data_type:
-                        image_paths.append(line_[1])
-
-                        # Encoded. Use the birds csv to translate class to common name or species
-                        targets.append(int(line_[0]))
-
-                targets = torch.tensor(np.array(targets)).reshape(-1, 1)
-
-                return image_paths, targets
-
-        except FileExistsError as e:
-            print(e)
-            print('Run "make data" again')
-            return None, None
-
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        return self.data[idx, :, :, :], self.targets[idx]
-
-    def __len__(self) -> int:
-        return self.data.shape[0]
+    def __call__(self, batch):
+        encodings = self.feature_extractor([x[0] for x in batch], return_tensors="pt")
+        encodings["labels"] = torch.tensor([x[1] for x in batch], dtype=torch.long)
+        return encodings
 
 
 @click.command()
 @click.argument("input_filepath", type=click.Path(exists=True))
 @click.argument("output_filepath", type=click.Path())
-def main(input_filepath, output_filepath):
+def main(input_filepath: str, output_filepath: str) -> None:
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
     logger.info("making final data set from raw data")
 
-    train = BirdsDataset(input_filepath, output_filepath, "train")
-    train.save_preprocessed()
+    Path(output_filepath).mkdir(exist_ok=True)
 
-    test = BirdsDataset(input_filepath, output_filepath, "test")
-    test.save_preprocessed()
+    train_ds = BirdsDataset(input_filepath, "train")
+    train_ds.save_ds(output_filepath)
 
-    validation = BirdsDataset(input_filepath, output_filepath, "valid")
-    validation.save_preprocessed()
+    valid_ds = BirdsDataset(input_filepath, "valid")
+    valid_ds.save_ds(output_filepath)
+
+    test_ds = BirdsDataset(input_filepath, "test")
+    test_ds.save_ds(output_filepath)
 
 
 if __name__ == "__main__":

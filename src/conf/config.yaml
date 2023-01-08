@@ -1,0 +1,17 @@
+#hydra_config.yaml
+
+dirs:
+  input_path: ${hydra:runtime.cwd}/data/raw
+
+
+hyperparameters:
+  pretrained_feature_extractor: google/vit-base-patch16-224-in21k
+  train_batch_size: 16
+  num_workers: 4
+  valid_batch_size: 16
+  lr: 1e-3
+  max_epochs: 10
+  precision: 16
+  device: cpu
+  num_devices: 1
+  seed: 1337
