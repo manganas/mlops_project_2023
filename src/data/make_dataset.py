@@ -69,6 +69,8 @@ def main(input_filepath: str, output_filepath: str) -> None:
     logger = logging.getLogger(__name__)
     logger.info("making final data set from raw data")
 
+    Path(output_filepath).mkdir(exist_ok=True)
+
     train_ds = BirdsDataset(input_filepath, "train")
     train_ds.save_ds(output_filepath)
 
