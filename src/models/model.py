@@ -1,10 +1,6 @@
-
-import torch
 import pytorch_lightning as pl
-from torchmetrics import Accuracy, Recall, Precision, F1Score, AUROC
-
-
-
+import torch
+from torchmetrics import AUROC, Accuracy, F1Score, Precision, Recall
 
 
 class Classifier(pl.LightningModule):
