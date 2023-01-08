@@ -1,6 +1,9 @@
 # Ignore data files
 ./data/
 
+# Hydra outputs
+outputs
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
