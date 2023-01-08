@@ -5,9 +5,8 @@ from typing import List, Tuple
 
 import click
 import numpy as np
-from dotenv import find_dotenv, load_dotenv
-
 import torch
+from dotenv import find_dotenv, load_dotenv
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
