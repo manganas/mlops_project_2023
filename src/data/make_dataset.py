@@ -4,15 +4,10 @@ from pathlib import Path
 from typing import List, Dict
 
 import click
-import torch
 from dotenv import find_dotenv, load_dotenv
-from torchvision.transforms import RandomResizedCrop, Compose, Normalize, ToTensor
-from torchvision.datasets import ImageFolder
+from datasets import load_dataset
 
-
-from transformers import AutoFeatureExtractor
-
-from PIL import Image
+from torch.utils.data import Dataset
 
 
 class BirdsDataset:
@@ -21,96 +16,24 @@ class BirdsDataset:
         input_filepath: str,
         output_filepath: str,
         data_type: str,
-        pretrained_name: str,
     ) -> None:
         super(BirdsDataset, self).__init__()
 
         self.input_filepath = input_filepath
         self.output_filepath = output_filepath
         self.data_type = data_type
-        # If the processed folder is populated, read the data from there and return!
-        # Otherwise...:
-        if Path(output_filepath).is_dir():
-            try:
-                self.data = self.load_ds()
-                return
-            except FileNotFoundError as e:
-                print(e)
 
-        # Creates an class, with members: PIL images, targets and classes (names of folders)
-        ds = ImageFolder(input_filepath + "/" + data_type)
+        # Create the output save folder if it does not yet exist. Optional now with load_dataset
+        Path(output_filepath).mkdir(exist_ok=True, parents=True)
 
-        # Create dictionaries that match bird name to target (an int) and vice versa
-        self.label2id = {}
-        self.id2label = {}
-        for i, class_name in enumerate(ds.classes):
-            self.label2id[class_name] = str(i)
-            self.id2label[str(i)] = class_name
-
-        # I need my data as a dictionary for huggingface Trainer
-        self.data = []
-        for i in range(len(ds.targets)):
-            self.data.append(
-                {"image": Image.open(ds.imgs[i][0]), "label": ds.targets[i]}
-            )
-
-        # I do not need ds anymore
-        del ds
-
-        feature_extractor = AutoFeatureExtractor.from_pretrained(pretrained_name)
-
-        normalize = Normalize(
-            mean=feature_extractor.image_mean, std=feature_extractor.image_std
+        self.__data__ = load_dataset(
+            "imagefolder",
+            data_dir=input_filepath + f"/{data_type}",
+            cache_dir=output_filepath + f"/{data_type}",
         )
 
-        transforms_ = Compose(
-            [
-                RandomResizedCrop(feature_extractor.size),
-                ToTensor(),
-                normalize,
-            ]
-        )
-
-        for data_point in self.data:
-            data_point["pixel_values"] = transforms_(data_point["image"].convert("RGB"))
-            data_point["label"] = torch.tensor(data_point["label"])
-            # Free up some RAM
-            del data_point["image"]
-
-    def save_ds(self) -> None:
-
-        # Create the output_dir if it does not exist
-        Path(self.output_filepath).mkdir(exist_ok=True)
-
-        imgs_tsnr = []
-        labels_tsnr = []
-        for data_point in self.data:
-            imgs_tsnr.append(data_point["pixel_values"])
-            labels_tsnr.append(data_point["label"])
-
-        labels_tsnr = torch.stack(labels_tsnr, 0)
-        imgs_tsnr = torch.stack(imgs_tsnr, 0)
-        torch.save(
-            [imgs_tsnr, labels_tsnr],
-            self.output_filepath + "/" + self.data_type + "_processed.pt",
-        )
-
-    def load_ds(self) -> List[Dict]:
-        data = torch.load(self.output_filepath + "/" + self.data_type + "_processed.pt")
-        ds = []
-        for i in range(len(data[1])):
-            ds.append({"pixel_values": data[0][i], "label": data[1][i]})
-        return ds
-
-
-class ImageClassificationCollator:
-    def __init__(self, feature_extractor):
-        self.feature_extractor = feature_extractor
-
-    def __call__(self, batch):
-        encodings = self.feature_extractor([x[0] for x in batch], return_tensors="pt")
-        encodings["labels"] = torch.tensor([x[1] for x in batch], dtype=torch.long)
-        return encodings
+    def get_data(self) -> Dataset:
+        return self.__data__["train"]  # 'train' key is the default for load_dataset
 
 
 @click.command()
@@ -123,18 +46,14 @@ def main(input_filepath: str, output_filepath: str) -> None:
     logger = logging.getLogger(__name__)
     logger.info("making final data set from raw data")
 
-    pretrained_name = "google/vit-base-patch16-224-in21k"
+    # Prepare train dataset
+    _ = BirdsDataset(input_filepath, output_filepath, "train")
 
-    # train_ds = BirdsDataset(input_filepath, "train", pretrained_name)
-    valid_ds = BirdsDataset(input_filepath, output_filepath, "valid", pretrained_name)
-    valid_ds.save_ds()
-    # test_ds = BirdsDataset(input_filepath, "test")
+    # Prepare validation dataset
+    _ = BirdsDataset(input_filepath, output_filepath, "valid")
 
-    return
-
-    train_ds.save_ds(output_filepath)
-
-    test_ds.save_ds(output_filepath)
+    # Prepare test dataset
+    _ = BirdsDataset(input_filepath, output_filepath, "test")
 
 
 if __name__ == "__main__":
