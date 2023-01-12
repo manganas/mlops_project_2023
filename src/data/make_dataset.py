@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 from pathlib import Path
-from typing import List, Dict
 
 import click
 from dotenv import find_dotenv, load_dotenv
