@@ -1,31 +1,26 @@
-import pytorch_lightning as pl
-import torch
-from torchmetrics import AUROC, Accuracy, F1Score, Precision, Recall
+from typing import Dict
 
 
-class Classifier(pl.LightningModule):
-    def __init__(self, model, lr: float =1e-3):
-        super(Classifier, self).__init__()
-        self.lr = lr
-        self.model = model
-        self.forward = self.model.forward
-        self.val_acc = Accuracy(
-            task='multiclass' if model.config.num_labels > 2 else 'binary',
-            num_classes=model.config.num_labels
+from transformers import AutoModelForImageClassification
+
+
+class MyClassifier:
+    def __init__(
+        self,
+        pretrained_model: str,
+        num_labels: int,
+        feature_extractor_cache: str,
+        **kwargs,
+    ) -> None:
+
+        # id2label = {id: label for (label, id) in label2id.items()}
+
+        self._model_ = AutoModelForImageClassification.from_pretrained(
+            pretrained_model,
+            num_labels=num_labels,
+            cache_dir=feature_extractor_cache,
+            **kwargs,
         )
 
-    def training_step(self, batch, batch_idx):
-        outputs = self(**batch)
-        self.log(f"train_loss", outputs.loss)
-        return outputs.loss
-
-    def validation_step(self, batch, batch_idx):
-        outputs = self(**batch)
-        self.log(f"val_loss", outputs.loss)
-        acc = self.val_acc(outputs.logits.argmax(1), batch['labels'])
-        self.log(f"val_acc", acc, prog_bar=True)
-        return outputs.loss
-
-    def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.lr)
-        
+    def get_model(self) -> AutoModelForImageClassification:
+        return self._model_

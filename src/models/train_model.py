@@ -1,87 +1,152 @@
-from pathlib import Path
+import logging
 
-import pytorch_lightning as pl
-from torch.utils.data import DataLoader
-from transformers import ViTFeatureExtractor, ViTForImageClassification
-
-from src.data.make_dataset import BirdsDataset, ImageClassificationCollator
-from src.models.model import Classifier
-from src.config import BirdsConfig
+from typing import Dict
 
 import hydra
+import numpy as np
+import torch
+from datasets import load_metric
 from hydra.core.config_store import ConfigStore
+from torch.utils.data import DataLoader
 
+
+from tqdm import tqdm
+from transformers import (
+    AutoFeatureExtractor,
+    get_scheduler,
+)
+
+from src.config import BirdsConfig
+from src.data.make_dataset import BirdsDataset
+from src.models.model import MyClassifier
 
 cs = ConfigStore.instance()
 cs.store("birds_config", node=BirdsConfig)
 
 
+def move_to(x, device: torch.device):
+    pass
+
+
 @hydra.main(config_path="../conf", config_name="config.yaml")
 def main(cfg: BirdsConfig):
-    # Dirs, hyperparameters
-    # in_path = Path.cwd() / "data" / "raw"
-    # in_path = in_path.as_posix()
-    # pretrained_feature_extractor = "google/vit-base-patch16-224-in21k"
 
-    in_path = cfg.dirs.input_path
+    #############
+    ## GLOBALS ##
 
-    hyper = cfg.hyperparameters
-    pretrained_feature_extractor = hyper.pretrained_feature_extractor
-    train_batch_size = hyper.train_batch_size
-    num_workers = hyper.num_workers
-    valid_batch_size = hyper.valid_batch_size
-    seed = hyper.seed
-    lr = hyper.lr
-    device = hyper.device
-    num_devices = hyper.num_devices
-    precision = hyper.precision
-    max_epochs = hyper.max_epochs
+    # Directories
 
-    # Datasets
-    train_dataset = BirdsDataset(in_path, "train")
-    valid_dataset = BirdsDataset(in_path, "valid")
-    test_dataset = BirdsDataset(in_path, "test")
+    data_input_filepath = cfg.dirs.input_path
+    data_output_filepath = cfg.dirs.output_path
+    feature_extractor_cache = cfg.dirs.feature_extractor
 
-    train_ds = train_dataset.ds
-    valid_ds = valid_dataset.ds
-    test_ds = test_dataset.ds
+    saved_models_dir = cfg.dirs.saved_models_dir
+    saved_weights_dir = cfg.dirs.saved_weights_dir
 
-    feature_extractor = ViTFeatureExtractor.from_pretrained(
-        pretrained_feature_extractor
+    # Hyperparameters
+    pretrained_model = cfg.hyperparameters.pretrained_feature_extractor
+    lr = cfg.hyperparameters.lr
+    batch_size = cfg.hyperparameters.batch_size
+    epochs = cfg.hyperparameters.epochs
+    gpu = cfg.hyperparameters.gpu
+
+    #############
+    #############
+
+    device = "cuda" if (gpu and torch.cuda.is_available()) else "cpu"
+    print(f"Device: {device}")
+    device = torch.device(device)
+
+    ## Logic that checks if an already trained model exists!
+
+    feature_extractor = AutoFeatureExtractor.from_pretrained(
+        pretrained_model, cache_dir=feature_extractor_cache
     )
 
-    model = ViTForImageClassification.from_pretrained(
-        pretrained_feature_extractor,
-        num_labels=len(train_dataset.label2id),
-        label2id=train_dataset.label2id,
-        id2label=train_dataset.id2label,
+    # Prepare datasets
+    train_data = BirdsDataset(
+        input_filepath=data_input_filepath,
+        output_filepath=data_output_filepath,
+        data_type="train",
+        feature_extractor=feature_extractor,
     )
 
-    collator = ImageClassificationCollator(feature_extractor)
-    train_loader = DataLoader(
-        train_ds,
-        batch_size=train_batch_size,
-        collate_fn=collator,
-        num_workers=num_workers,
-        shuffle=True,
-    )
-    val_loader = DataLoader(
-        valid_ds,
-        batch_size=valid_batch_size,
-        collate_fn=collator,
-        num_workers=num_workers,
+    train_dataset = train_data.get_data()
+
+    valid_data = BirdsDataset(
+        input_filepath=data_input_filepath,
+        output_filepath=data_output_filepath,
+        data_type="valid",
+        feature_extractor=feature_extractor,
     )
 
-    pl.seed_everything(seed)
-    classifier = Classifier(model, lr=lr)
-    trainer = pl.Trainer(
-        accelerator=device,
-        devices=num_devices,
-        precision=precision,
-        max_epochs=max_epochs,
+    valid_dataset = valid_data.get_data()
+
+    # Get features from the data
+
+    def tokenize_function(examples) -> Dict:
+        return feature_extractor(examples["image"])
+
+    train_dataset = train_dataset.map(tokenize_function, batched=True)
+    train_dataset = train_dataset.remove_columns(["image"])
+    train_dataset = train_dataset.rename_column("label", "labels")
+    train_dataset.set_format("torch")
+
+    valid_dataset = valid_dataset.map(tokenize_function, batched=True)
+    valid_dataset = valid_dataset.remove_columns(["image"])
+    valid_dataset = valid_dataset.rename_column("label", "labels")
+    valid_dataset.set_format("torch")
+
+    train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size)
+    valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=batch_size)
+
+    model_options = {"ignore_mismatched_sizes": True}
+
+    model = MyClassifier(
+        pretrained_model=pretrained_model,
+        num_labels=train_data.num_classes,
+        feature_extractor_cache=feature_extractor_cache,
+        **model_options,
+    ).get_model()
+
+    model_name = pretrained_model.split("/")[-1]
+
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+
+    num_training_steps = epochs * len(train_dataloader)
+    lr_scheduler = get_scheduler(
+        name="linear",
+        optimizer=optimizer,
+        num_warmup_steps=0,
+        num_training_steps=num_training_steps,
     )
-    trainer.fit(classifier, train_loader, val_loader)
+
+    model.to(device)
+
+    for epoch in tqdm(range(epochs), desc="Training"):
+        model.train()
+        running_loss = 0.0
+
+        for batch in tqdm(train_dataloader, desc="Batch", leave=False):
+
+            optimizer.zero_grad()
+
+            batch = {k: v.to(device) for k, v in batch.items()}
+
+            y_pred = model(**batch)
+
+            loss = y_pred.loss
+
+            loss.backward()
+
+            optimizer.step()
+
+            running_loss += loss.item()
+
+            lr_scheduler.step()
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger(__name__)
+    logger.info("training model")
     main()

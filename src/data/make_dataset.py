@@ -1,83 +1,94 @@
 # -*- coding: utf-8 -*-
 import logging
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict
+import pickle
 
-import click
-import numpy as np
-import torch
+import hydra
+from datasets import load_dataset
 from dotenv import find_dotenv, load_dotenv
-from torchvision import transforms
-from torchvision.datasets import ImageFolder
+from hydra.core.config_store import ConfigStore
+from torch.utils.data import Dataset
+
+
+from transformers import AutoFeatureExtractor
+
+from src.config import BirdsConfig
+
+cs = ConfigStore.instance()
+cs.store("birds_config", node=BirdsConfig)
 
 
 class BirdsDataset:
-    def __init__(self, input_filepath: str, data_type: str) -> None:
+    def __init__(
+        self,
+        input_filepath: str,
+        output_filepath: str,
+        data_type: str,
+        feature_extractor: AutoFeatureExtractor,
+    ) -> None:
 
         self.input_filepath = input_filepath
+        self.output_filepath = output_filepath
         self.data_type = data_type
-
-        self.ds = ImageFolder(input_filepath + "/" + data_type)
-
-        self.label2id = {}
-        self.id2label = {}
-
-        for i, class_name in enumerate(self.ds.classes):
-            self.label2id[class_name] = str(i)
-            self.id2label[str(i)] = class_name
-
-        means = (0.0) * 3
-        stds = (1.0) * 3
-
-        self.transform = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize(means, stds)]
-        )
-
-    def save_ds(self, output_filepath: str) -> None:
-        imgs_tsnr = []
-        labels_tsnr = []
-        for data_point in self.ds:
-            imgs_tsnr.append(self.transform(data_point[0]))
-            labels_tsnr.append(data_point[1])
-
-        labels_tsnr = torch.from_numpy(np.array(labels_tsnr))
-        imgs_tsnr = torch.stack(imgs_tsnr, 0)
-        torch.save(
-            [imgs_tsnr, labels_tsnr],
-            output_filepath + "/" + self.data_type + "_processed.pt",
-        )
-
-
-class ImageClassificationCollator:
-    def __init__(self, feature_extractor):
         self.feature_extractor = feature_extractor
 
-    def __call__(self, batch):
-        encodings = self.feature_extractor([x[0] for x in batch], return_tensors="pt")
-        encodings["labels"] = torch.tensor([x[1] for x in batch], dtype=torch.long)
-        return encodings
+        # Create the output save folder if it does not yet exist. Optional now with load_dataset
+        Path(output_filepath).mkdir(exist_ok=True, parents=True)
+
+        self.__data__ = load_dataset(
+            "imagefolder",
+            data_dir=input_filepath + f"/{data_type}",
+            cache_dir=output_filepath + f"/{data_type}",
+        )
+
+        self.num_classes = len(self.__data__["train"].features["label"].names)
+
+        labels = self.__data__["train"].features["label"].names
+        label2id, id2label = dict(), dict()
+        for i, label in enumerate(labels):
+            label2id[label] = i
+            id2label[i] = label
+
+        if data_type.lower().strip() == "train":
+            self.save_labels_ids(label2id, "label2id")
+            self.save_labels_ids(id2label, "id2label")
+
+    def get_data(self) -> Dataset:
+        # 'train' key is the default for load_dataset. All of the dataset types have it
+        return self.__data__["train"]
+
+    def save_labels_ids(self, labels_ids: Dict, filename: str) -> None:
+        with open(self.output_filepath + "/" + filename + ".pkl", "wb") as f:
+            pickle.dump(labels_ids, f)
 
 
-@click.command()
-@click.argument("input_filepath", type=click.Path(exists=True))
-@click.argument("output_filepath", type=click.Path())
-def main(input_filepath: str, output_filepath: str) -> None:
+@hydra.main(config_path="../conf", config_name="config.yaml")
+def main(cfg: BirdsConfig) -> None:
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
     logger.info("making final data set from raw data")
 
-    Path(output_filepath).mkdir(exist_ok=True)
+    input_filepath = cfg.dirs.input_path
+    output_filepath = cfg.dirs.output_path
+    pretrained_feature_extractor = cfg.hyperparameters.pretrained_feature_extractor
+    feature_extractor_cache_dir = cfg.dirs.feature_extractor
 
-    train_ds = BirdsDataset(input_filepath, "train")
-    train_ds.save_ds(output_filepath)
+    # Because it is needed in the dataset contrsuctor
+    feature_extractor = AutoFeatureExtractor.from_pretrained(
+        pretrained_feature_extractor, cache_dir=feature_extractor_cache_dir
+    )
 
-    valid_ds = BirdsDataset(input_filepath, "valid")
-    valid_ds.save_ds(output_filepath)
+    # Prepare train dataset
+    _ = BirdsDataset(input_filepath, output_filepath, "train", feature_extractor)
 
-    test_ds = BirdsDataset(input_filepath, "test")
-    test_ds.save_ds(output_filepath)
+    # Prepare validation dataset
+    _ = BirdsDataset(input_filepath, output_filepath, "valid", feature_extractor)
+
+    # Prepare test dataset
+    _ = BirdsDataset(input_filepath, output_filepath, "test", feature_extractor)
 
 
 if __name__ == "__main__":
