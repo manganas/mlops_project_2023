@@ -7,16 +7,11 @@ import pickle
 import hydra
 from datasets import load_dataset
 from dotenv import find_dotenv, load_dotenv
-from hydra.core.config_store import ConfigStore
+
 from torch.utils.data import Dataset
 
 
 from transformers import AutoFeatureExtractor
-
-from src.config import BirdsConfig
-
-cs = ConfigStore.instance()
-cs.store("birds_config", node=BirdsConfig)
 
 
 class BirdsDataset:
@@ -64,7 +59,7 @@ class BirdsDataset:
 
 
 @hydra.main(config_path="../conf", config_name="config.yaml")
-def main(cfg: BirdsConfig) -> None:
+def main(cfg) -> None:
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
     """

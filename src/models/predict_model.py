@@ -69,8 +69,6 @@ def main(cfg: BirdsConfig):
         pretrained_model, cache_dir=feature_extractor_cache
     )
 
-    # get_pretrained(saved_models_dir)
-
 
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
