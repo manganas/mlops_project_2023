@@ -17,4 +17,8 @@ hyperparameters:
   precision: 16
   device: cpu
   num_devices: 1
+  gpu: True
   seed: 1337
+
+names:
+  saved_model_name_prefix: 'my_model'
