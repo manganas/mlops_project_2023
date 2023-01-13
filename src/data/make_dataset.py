@@ -1,21 +1,16 @@
 # -*- coding: utf-8 -*-
 import logging
 from pathlib import Path
+from typing import Dict
+import pickle
 
 import hydra
 from datasets import load_dataset
 from dotenv import find_dotenv, load_dotenv
 from hydra.core.config_store import ConfigStore
 from torch.utils.data import Dataset
-from torchvision.transforms import (
-    CenterCrop,
-    Compose,
-    Normalize,
-    RandomHorizontalFlip,
-    RandomResizedCrop,
-    Resize,
-    ToTensor,
-)
+
+
 from transformers import AutoFeatureExtractor
 
 from src.config import BirdsConfig
@@ -41,11 +36,6 @@ class BirdsDataset:
         # Create the output save folder if it does not yet exist. Optional now with load_dataset
         Path(output_filepath).mkdir(exist_ok=True, parents=True)
 
-        # Create the transforms for the datasets
-        normalize = Normalize(
-            mean=feature_extractor.image_mean, std=feature_extractor.image_std
-        )
-
         self.__data__ = load_dataset(
             "imagefolder",
             data_dir=input_filepath + f"/{data_type}",
@@ -55,14 +45,22 @@ class BirdsDataset:
         self.num_classes = len(self.__data__["train"].features["label"].names)
 
         labels = self.__data__["train"].features["label"].names
-        self.label2id, self.id2label = dict(), dict()
+        label2id, id2label = dict(), dict()
         for i, label in enumerate(labels):
-            self.label2id[label] = i
-            self.id2label[i] = label
+            label2id[label] = i
+            id2label[i] = label
+
+        if data_type.lower().strip() == "train":
+            self.save_labels_ids(label2id, "label2id")
+            self.save_labels_ids(id2label, "id2label")
 
     def get_data(self) -> Dataset:
         # 'train' key is the default for load_dataset. All of the dataset types have it
         return self.__data__["train"]
+
+    def save_labels_ids(self, labels_ids: Dict, filename: str) -> None:
+        with open(self.output_filepath + "/" + filename + ".pkl", "wb") as f:
+            pickle.dump(labels_ids, f)
 
 
 @hydra.main(config_path="../conf", config_name="config.yaml")
