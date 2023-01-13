@@ -2,27 +2,23 @@
 import logging
 from pathlib import Path
 
-from dotenv import find_dotenv, load_dotenv
+import hydra
 from datasets import load_dataset
-
-from torchvision.transforms import (
-    ToTensor,
-    Normalize,
-    RandomResizedCrop,
-    CenterCrop,
-    RandomHorizontalFlip,
-    Resize,
-    Compose,
-)
-
+from dotenv import find_dotenv, load_dotenv
+from hydra.core.config_store import ConfigStore
 from torch.utils.data import Dataset
+from torchvision.transforms import (
+    CenterCrop,
+    Compose,
+    Normalize,
+    RandomHorizontalFlip,
+    RandomResizedCrop,
+    Resize,
+    ToTensor,
+)
 from transformers import AutoFeatureExtractor
 
-
-import hydra
-from hydra.core.config_store import ConfigStore
 from src.config import BirdsConfig
-
 
 cs = ConfigStore.instance()
 cs.store("birds_config", node=BirdsConfig)
@@ -40,6 +36,7 @@ class BirdsDataset:
         self.input_filepath = input_filepath
         self.output_filepath = output_filepath
         self.data_type = data_type
+        self.feature_extractor = feature_extractor
 
         # Create the output save folder if it does not yet exist. Optional now with load_dataset
         Path(output_filepath).mkdir(exist_ok=True, parents=True)
@@ -55,34 +52,17 @@ class BirdsDataset:
             cache_dir=output_filepath + f"/{data_type}",
         )
 
-        self.transforms = Compose(
-            [
-                Resize(feature_extractor.size),
-                CenterCrop(feature_extractor.size),
-                ToTensor(),
-                normalize,
-            ]
-        )
+        self.num_classes = len(self.__data__["train"].features["label"].names)
 
-        if data_type.lower() == "train":
-            self.transforms = Compose(
-                [
-                    RandomResizedCrop(feature_extractor.size),
-                    RandomHorizontalFlip(),
-                    ToTensor(),
-                    normalize,
-                ]
-            )
+        labels = self.__data__["train"].features["label"].names
+        self.label2id, self.id2label = dict(), dict()
+        for i, label in enumerate(labels):
+            self.label2id[label] = i
+            self.id2label[i] = label
 
     def get_data(self) -> Dataset:
-        return self.__data__["train"]  # 'train' key is the default for load_dataset
-
-    def preprocess(self, example_batch):
-        """Apply transforms across a batch."""
-        example_batch["pixel_values"] = [
-            self.transforms(image.convert("RGB")) for image in example_batch["image"]
-        ]
-        return example_batch
+        # 'train' key is the default for load_dataset. All of the dataset types have it
+        return self.__data__["train"]
 
 
 @hydra.main(config_path="../conf", config_name="config.yaml")
