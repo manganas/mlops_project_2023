@@ -1,4 +1,4 @@
-from transformers import ViTModel, ViTFeatureExtractor, AutoTokenizer
+from transformers import ViTModel, ViTFeatureExtractor, ViTForImageClassification
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -14,7 +14,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 vit_pretrained = "google/vit-base-patch16-224-in21k"
-in_dir = Path.cwd() / 'data'/'raw'/'train'
+in_dir = Path.cwd() / "data" / "raw" / "train"
 batch_size = 64
 epochs = 1
 lr = 1e-3
@@ -25,17 +25,17 @@ feature_extractor = ViTFeatureExtractor.from_pretrained(vit_pretrained)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
+
 class BirdsDataset(Dataset):
-    def __init__(self, in_dir, feature_extractor, h=None,w=None):
+    def __init__(self, in_dir, feature_extractor, h=None, w=None):
         super(BirdsDataset, self).__init__()
         self.in_dir = in_dir
-        
-        means = (0.0)*3
-        stds = (1.0)*3
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(means, stds)
-        ])
+
+        means = (0.0) * 3
+        stds = (1.0) * 3
+        self.transform = transforms.Compose(
+            [transforms.ToTensor(), transforms.Normalize(means, stds)]
+        )
 
         self.data = ImageFolder(in_dir)
 
@@ -44,57 +44,63 @@ class BirdsDataset(Dataset):
         self.h = h
         self.w = w
         self.feature_extractor = feature_extractor
-        
 
     def __getitem__(self, idx):
         data = self.data.imgs[idx]
         img_path, target = data[0], data[1]
         img = Image.open(img_path)
-        
+
         if self.h and self.w:
             img = img.resize(size=(self.h, self.w))
 
         # img = self.transform(img) ## In favour of feature extractor. The result is the same
         target = torch.tensor(target)
-        return  self.feature_extractor(images=[img], return_tensors="pt").pixel_values, target
+        return (
+            self.feature_extractor(images=img, return_tensors="pt").pixel_values,
+            target,
+        )
 
     def __len__(self):
         return len(self.data)
 
 
+# class MyClassifier(nn.Module):
+#     def __init__(self, num_classes, feature_extractor):
+#         super(MyClassifier, self).__init__()
+#         self.transformer = ViTModel.from_pretrained(vit_pretrained)
+
+#         transformer_out_shape = self.get_transformer_embedding_size(torch.rand([1,3,feature_extractor.size, feature_extractor.size]))
+
+#         self.output_layer = nn.Linear(transformer_out_shape, num_classes)
 
 
-class MyClassifier(nn.Module):
-    def __init__(self, num_classes, feature_extractor):
-        super(MyClassifier, self).__init__()
-        self.transformer = ViTModel.from_pretrained(vit_pretrained)
+#     def forward(self, x):
+#         pass
 
-        transformer_out_shape = self.get_transformer_embedding_size(torch.rand([1,3,feature_extractor.size, feature_extractor.size]))
-
-        self.output_layer = nn.Linear(transformer_out_shape, num_classes)
-
-
-    def forward(self, x):
-        pass
-
-    def get_transformer_embedding_size(self, x):
-        print(type(self.transformer(x)))
-        return None
-
+#     def get_transformer_embedding_size(self, x):
+#         print(type(self.transformer(x)))
+#         return None
 
 
 feature_extractor = ViTFeatureExtractor(vit_pretrained)
-data = BirdsDataset(in_dir.as_posix(),feature_extractor)
+data = BirdsDataset(in_dir.as_posix(), feature_extractor)
 trainloader = DataLoader(data, batch_size=batch_size, shuffle=True, num_workers=4)
 
-model = MyClassifier(len(data.classes),feature_extractor)
+model = ViTForImageClassification.from_pretrained(vit_pretrained)
 
-# criterion = nn.NLLLoss()
-# optim = torch.optim.Adam(model.parameters(), lr=lr)
+criterion = nn.NLLLoss()
+optim = torch.optim.Adam(model.parameters(), lr=lr)
 
 for epoch in range(epochs):
-    for imgs, targets in tqdm(trainloader, desc='Training', leave=False):
-        print(imgs.shape, targets.shape)
+
+    running_loss = 0
+    model.train()
+    for imgs, targets in tqdm(trainloader, desc="Training", leave=False):
+        imgs = imgs.to(device)
+        targets.to(device)
+
+        print(imgs.shape)
+
 
 # def predict_step(image_paths):
 #     images = []
@@ -108,7 +114,7 @@ for epoch in range(epochs):
 #     pixel_values = pixel_values.to(device)
 
 #     return
-    
+
 #     output_ids = model.generate(pixel_values, **gen_kwargs)
 #     preds = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
 #     preds = [pred.strip() for pred in preds]

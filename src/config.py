@@ -2,8 +2,9 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Dirs:
+class Directories:
     input_path: str
+    output_path: str
 
 
 @dataclass
@@ -22,5 +23,5 @@ class Hyperparameters:
 
 @dataclass
 class BirdsConfig:
-    dirs: Dirs
+    dirs: Directories
     hyperparameters: Hyperparameters

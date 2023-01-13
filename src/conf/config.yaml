@@ -2,15 +2,18 @@
 
 dirs:
   input_path: ${hydra:runtime.cwd}/data/raw
+  output_path: ${hydra:runtime.cwd}/data/processed
+  feature_extractor: ${hydra:runtime.cwd}/models/feature_extractor
+  saved_models_dir: ${hydra:runtime.cwd}/models/saved_models
+  saved_weights_dir: ${hydra:runtime.cwd}/models/saved_weights
 
 
 hyperparameters:
   pretrained_feature_extractor: google/vit-base-patch16-224-in21k
-  train_batch_size: 16
+  batch_size: 64
   num_workers: 4
-  valid_batch_size: 16
   lr: 1e-3
-  max_epochs: 10
+  epochs: 1
   precision: 16
   device: cpu
   num_devices: 1

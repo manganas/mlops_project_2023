@@ -2,11 +2,30 @@
 import logging
 from pathlib import Path
 
-import click
 from dotenv import find_dotenv, load_dotenv
 from datasets import load_dataset
 
+from torchvision.transforms import (
+    ToTensor,
+    Normalize,
+    RandomResizedCrop,
+    CenterCrop,
+    RandomHorizontalFlip,
+    Resize,
+    Compose,
+)
+
 from torch.utils.data import Dataset
+from transformers import AutoFeatureExtractor
+
+
+import hydra
+from hydra.core.config_store import ConfigStore
+from src.config import BirdsConfig
+
+
+cs = ConfigStore.instance()
+cs.store("birds_config", node=BirdsConfig)
 
 
 class BirdsDataset:
@@ -15,8 +34,8 @@ class BirdsDataset:
         input_filepath: str,
         output_filepath: str,
         data_type: str,
+        feature_extractor: AutoFeatureExtractor,
     ) -> None:
-        super(BirdsDataset, self).__init__()
 
         self.input_filepath = input_filepath
         self.output_filepath = output_filepath
@@ -25,34 +44,73 @@ class BirdsDataset:
         # Create the output save folder if it does not yet exist. Optional now with load_dataset
         Path(output_filepath).mkdir(exist_ok=True, parents=True)
 
+        # Create the transforms for the datasets
+        normalize = Normalize(
+            mean=feature_extractor.image_mean, std=feature_extractor.image_std
+        )
+
         self.__data__ = load_dataset(
             "imagefolder",
             data_dir=input_filepath + f"/{data_type}",
             cache_dir=output_filepath + f"/{data_type}",
         )
 
+        self.transforms = Compose(
+            [
+                Resize(feature_extractor.size),
+                CenterCrop(feature_extractor.size),
+                ToTensor(),
+                normalize,
+            ]
+        )
+
+        if data_type.lower() == "train":
+            self.transforms = Compose(
+                [
+                    RandomResizedCrop(feature_extractor.size),
+                    RandomHorizontalFlip(),
+                    ToTensor(),
+                    normalize,
+                ]
+            )
+
     def get_data(self) -> Dataset:
         return self.__data__["train"]  # 'train' key is the default for load_dataset
 
+    def preprocess(self, example_batch):
+        """Apply transforms across a batch."""
+        example_batch["pixel_values"] = [
+            self.transforms(image.convert("RGB")) for image in example_batch["image"]
+        ]
+        return example_batch
 
-@click.command()
-@click.argument("input_filepath", type=click.Path(exists=True))
-@click.argument("output_filepath", type=click.Path())
-def main(input_filepath: str, output_filepath: str) -> None:
+
+@hydra.main(config_path="../conf", config_name="config.yaml")
+def main(cfg: BirdsConfig) -> None:
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
     logger.info("making final data set from raw data")
 
+    input_filepath = cfg.dirs.input_path
+    output_filepath = cfg.dirs.output_path
+    pretrained_feature_extractor = cfg.hyperparameters.pretrained_feature_extractor
+    feature_extractor_cache_dir = cfg.dirs.feature_extractor
+
+    # Because it is needed in the dataset contrsuctor
+    feature_extractor = AutoFeatureExtractor.from_pretrained(
+        pretrained_feature_extractor, cache_dir=feature_extractor_cache_dir
+    )
+
     # Prepare train dataset
-    _ = BirdsDataset(input_filepath, output_filepath, "train")
+    _ = BirdsDataset(input_filepath, output_filepath, "train", feature_extractor)
 
     # Prepare validation dataset
-    _ = BirdsDataset(input_filepath, output_filepath, "valid")
+    _ = BirdsDataset(input_filepath, output_filepath, "valid", feature_extractor)
 
     # Prepare test dataset
-    _ = BirdsDataset(input_filepath, output_filepath, "test")
+    _ = BirdsDataset(input_filepath, output_filepath, "test", feature_extractor)
 
 
 if __name__ == "__main__":
