@@ -1,38 +1,26 @@
-import torch
-import torch.nn as nn
-
-from transformers import AutoModelForImageClassification
 from typing import Dict
 
 
-# model = AutoModelForImageClassification.from_pretrained(
-#     pretrained_model,
-#     label2id=label2id,
-#     id2label=id2label,
-#     ignore_mismatched_sizes=True,  # provide this in case you're planning to fine-tune an already fine-tuned checkpoint
-#     cache_dir=feature_extractor_cache,
-# )
+from transformers import AutoModelForImageClassification
 
 
-class MyClassifier(nn.Module):
+class MyClassifier:
     def __init__(
         self,
         pretrained_model: str,
-        label2id: Dict,
+        num_labels: int,
         feature_extractor_cache: str,
-        **kwargs
+        **kwargs,
     ) -> None:
-        super(MyClassifier, self).__init__()
 
-        id2label = {id: label for (label, id) in label2id.items()}
+        # id2label = {id: label for (label, id) in label2id.items()}
 
-        model = AutoModelForImageClassification.from_pretrained(
+        self._model_ = AutoModelForImageClassification.from_pretrained(
             pretrained_model,
-            label2id=label2id,
-            id2label=id2label,
+            num_labels=num_labels,
             cache_dir=feature_extractor_cache,
-            **kwargs
+            **kwargs,
         )
 
-    def forward(self, x: Dict):  # Check the output type!
-        return self.model(x)
+    def get_model(self) -> AutoModelForImageClassification:
+        return self._model_
