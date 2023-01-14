@@ -56,6 +56,7 @@ def main(cfg):
     seed = cfg.hyperparameters.seed
     n_train_datapoints = cfg.hyperparameters.n_train_datapoints
     n_valid_datapoints = cfg.hyperparameters.n_valid_datapoints
+    saved_model_name_prefix = cfg.names.saved_model_name_prefix
 
     #############
     #############
@@ -65,7 +66,7 @@ def main(cfg):
     device = torch.device(device)
 
     # Init wandb
-    wandb.init()
+    wandb.init(entity="team31")
 
     # In the dataset class!
     feature_extractor = AutoFeatureExtractor.from_pretrained(
@@ -206,7 +207,9 @@ def main(cfg):
             print(f"Validation Loss: {running_loss}, Validation Accuracy: {accuracy}")
 
         if epoch % save_per_epochs == 0:
-            torch.save(model, saved_models_dir + f"/checkpoint-{epoch}.pt")
+            torch.save(
+                model, saved_models_dir + f"/{saved_model_name_prefix}-{epoch}.pt"
+            )
 
 
 if __name__ == "__main__":
