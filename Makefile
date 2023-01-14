@@ -61,11 +61,11 @@ docker_run_trainer:
 	docker run -e WANDB_API_KEY=a009ef7ac8f8292a33c66a257ee94ec14d28d959 --name $$NAME -v $(pwd)/models/:/models/ docker_trainer:latest
 
 ## Build training docker image GPU
-docker_training_image:
+gpu_docker_training_image:
 	docker build -f trainer.dockerfile . -t gpu_docker_trainer:latest
 
 ## Run latest docker training image GPU
-docker_run_trainer:
+gpu_docker_run_trainer:
 	@echo "Name of docker run instance: "; \
     read NAME; \
 	docker run -e WANDB_API_KEY=b1b5623638ce4f864549651f863460a2c4f1c940 --name $$NAME --gpus all -v $(pwd)/models/:/models/ gpu_docker_trainer:latest
