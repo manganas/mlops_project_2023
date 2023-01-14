@@ -118,7 +118,7 @@ class Predictor:
         return torch.load(paths[idx])
 
 
-@hydra.main(config_path="../conf", config_name="config.yaml")
+@hydra.main(config_path="conf", config_name="config.yaml")
 def main(cfg):
 
     ### Globals
