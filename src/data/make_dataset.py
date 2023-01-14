@@ -58,7 +58,7 @@ class BirdsDataset:
             pickle.dump(labels_ids, f)
 
 
-@hydra.main(config_path="../conf", config_name="config.yaml")
+@hydra.main(config_path="conf", config_name="config.yaml")
 def main(cfg) -> None:
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
