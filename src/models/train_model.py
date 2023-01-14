@@ -41,6 +41,7 @@ def main(cfg):
     print(f"configuration Hoptimizer: \n {cfg.optimizers.Optimizer}")
 
     hparams = cfg.experiment.hyperparameters
+    names = cfg.experiment.names
     hoptimizer = cfg.optimizers.Optimizer
     hdirs = cfg.experiment.dirs
 
@@ -63,6 +64,8 @@ def main(cfg):
     seed = hparams.seed
     n_train_datapoints = hparams.n_train_datapoints
     n_valid_datapoints = hparams.n_valid_datapoints
+
+    saved_model_name_prefix = names.saved_model_name_prefix
 
     torch.manual_seed(hparams.seed)
     #############
@@ -133,11 +136,7 @@ def main(cfg):
 
     wandb.watch(model, log_freq=100)
 
-    model_name = pretrained_model.split("/")[-1]
-
-    print()
-    print(type(hoptimizer[0].optimizer))
-    print()
+    # model_name = pretrained_model.split("/")[-1]
 
     optimizer_dict = {
         "AdamW": torch.optim.AdamW(model.parameters(), lr=lr),
