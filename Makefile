@@ -28,10 +28,12 @@ requirements: test_environment
 ## Make Dataset
 data: requirements
 	$(PYTHON_INTERPRETER) src/data/make_dataset.py
-	
+
+## Train model
 train:
 	$(PYTHON_INTERPRETER) src/models/train_model.py
 
+## Run predictions on test images
 predict_test:
 	$(PYTHON_INTERPRETER) src/models/predict_model.py
 
@@ -43,6 +45,17 @@ clean:
 ## Lint using flake8
 lint:
 	flake8 src
+
+
+## Build training docker image
+docker_training_image:
+	docker build -f trainer.dockerfile . -t trainer:latest
+
+## Run latest docker training image
+docker_run_trainer:
+	docker run -e WANDB_API_KEY=a009ef7ac8f8292a33c66a257ee94ec14d28d959 --name experiment1 trainer:latest
+
+
 
 ## Upload Data to S3
 sync_data_to_s3:

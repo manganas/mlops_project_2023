@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 from typing import Dict
 
@@ -42,6 +43,7 @@ def main(cfg):
     feature_extractor_cache = cfg.dirs.feature_extractor
 
     saved_models_dir = cfg.dirs.saved_models_dir
+    Path(saved_models_dir).mkdir(exist_ok=True, parents=True)
     saved_weights_dir = cfg.dirs.saved_weights_dir
 
     # Hyperparameters
