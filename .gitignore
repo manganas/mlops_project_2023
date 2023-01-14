@@ -1,6 +1,6 @@
 # Ignore data files
-data/
-models/
+/data/*
+/models/*
 
 # Hydra outputs
 outputs/

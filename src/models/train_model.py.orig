@@ -19,7 +19,6 @@ from transformers import (
     get_scheduler,
 )
 
-
 import wandb
 
 from src.data.make_dataset import BirdsDataset
@@ -53,6 +52,19 @@ def main(cfg):
     saved_weights_dir = hdirs.saved_weights_dir
 
     # Hyperparameters
+<<<<<<< HEAD
+    pretrained_model = cfg.hyperparameters.pretrained_feature_extractor
+    lr = cfg.hyperparameters.lr
+    batch_size = cfg.hyperparameters.batch_size
+    epochs = cfg.hyperparameters.epochs
+    gpu = cfg.hyperparameters.gpu
+    save_per_epochs = cfg.hyperparameters.save_per_epochs
+    seed = cfg.hyperparameters.seed
+    n_train_datapoints = cfg.hyperparameters.n_train_datapoints
+    n_valid_datapoints = cfg.hyperparameters.n_valid_datapoints
+    saved_model_name_prefix = cfg.names.saved_model_name_prefix
+
+=======
     print()
     pretrained_model = hparams.pretrained_feature_extractor
     lr = hparams.lr
@@ -65,6 +77,7 @@ def main(cfg):
     n_valid_datapoints = hparams.n_valid_datapoints
 
     torch.manual_seed(hparams.seed)
+>>>>>>> Config_Files
     #############
     #############
 
@@ -72,8 +85,11 @@ def main(cfg):
     print(f"Device: {device}")
     device = torch.device(device)
 
+    ## Random seed
+    torch.manual_seed(seed)
+
     # Init wandb
-    wandb.init()
+    wandb.init(entity="team31")
 
     # In the dataset class!
     feature_extractor = AutoFeatureExtractor.from_pretrained(
