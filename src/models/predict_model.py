@@ -55,8 +55,10 @@ class Predictor:
         gpu = cfg.hyperparameters.gpu
         self.saved_prefix = cfg.names.saved_model_name_prefix
 
-        device = torch.device("cuda" if (gpu and torch.cuda.is_available()) else "cpu")
-        print(f"Using device: {device}")
+        self.device = torch.device(
+            "cuda" if (gpu and torch.cuda.is_available()) else "cpu"
+        )
+        print(f"Using device: {self.device}")
 
         self.feature_extractor = AutoFeatureExtractor.from_pretrained(
             self.pretrained_extractor_name, cache_dir=self.feature_extractor_cache
@@ -81,7 +83,7 @@ class Predictor:
             images=images, return_tensors="pt"
         ).pixel_values
         pixel_values = pixel_values.to(self.device)
-        output_logits = self.model(pixel_values=pixel_values)
+        output_logits = self.model(pixel_values=pixel_values).logits
         preds = torch.argmax(output_logits, dim=-1)  # otherwise dims=1
         preds = preds.detach().cpu().numpy()
 
@@ -141,7 +143,14 @@ def main(cfg):
     # # Otherwise, instantiate a new from the default feature extractor
     # # and hope for the best
 
+    test_dir = Path(cfg.dirs.input_path)
+    images_to_test = test_dir.glob("test/**/*.jpg")
+
     predictor = Predictor(cfg)
+    preds = predictor.predict(list(images_to_test))
+
+    for el in preds:
+        print(el)
 
 
 if __name__ == "__main__":
