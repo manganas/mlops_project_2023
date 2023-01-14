@@ -19,7 +19,6 @@ from transformers import (
     get_scheduler,
 )
 
-
 import wandb
 
 from src.data.make_dataset import BirdsDataset
@@ -38,13 +37,12 @@ def main(cfg):
 
     # Directories
     print(f"configuration Hparams: \n {cfg.experiment.hyperparameters}")
-    print(f"configuration Hoptimizer: \n {cfg.optimizer.Optimizer}")
+    print(f"configuration Hoptimizer: \n {cfg.optimizers.Optimizer}")
 
     hparams = cfg.experiment.hyperparameters
-    hoptimizer = cfg.optimizer.Optimizer
+    hoptimizer = cfg.optimizers.Optimizer
     hdirs = cfg.experiment.dirs
 
-    
     data_input_filepath = hdirs.input_path
     data_output_filepath = hdirs.output_path
     feature_extractor_cache = hdirs.feature_extractor
@@ -52,8 +50,7 @@ def main(cfg):
     saved_models_dir = hdirs.saved_models_dir
     Path(saved_models_dir).mkdir(exist_ok=True, parents=True)
     saved_weights_dir = hdirs.saved_weights_dir
-    
-    
+
     # Hyperparameters
     print()
     pretrained_model = hparams.pretrained_feature_extractor
@@ -65,7 +62,7 @@ def main(cfg):
     seed = hparams.seed
     n_train_datapoints = hparams.n_train_datapoints
     n_valid_datapoints = hparams.n_valid_datapoints
-    
+
     torch.manual_seed(hparams.seed)
     #############
     #############
@@ -137,7 +134,16 @@ def main(cfg):
 
     model_name = pretrained_model.split("/")[-1]
 
-    optimizer = torch.optim.hoptimizer(model.parameters(), lr=lr)
+    print()
+    print(type(hoptimizer[0].optimizer))
+    print()
+
+    optimizer_dict = {
+        "AdamW": torch.optim.AdamW(model.parameters(), lr=lr),
+        "SGD": torch.optim.SGD(model.parameters(), lr=lr),
+    }
+
+    optimizer = optimizer_dict[hoptimizer[0].optimizer]
 
     num_training_steps = epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(

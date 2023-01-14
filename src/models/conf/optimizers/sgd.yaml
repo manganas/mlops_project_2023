@@ -1,4 +1,4 @@
 ## SGD optimizer
 
 Optimizer:
-  -optimizer: SGD
+  - optimizer: SGD
