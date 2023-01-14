@@ -49,11 +49,13 @@ lint:
 
 ## Build training docker image
 docker_training_image:
-	docker build -f trainer.dockerfile . -t trainer:latest
+	docker build -f trainer.dockerfile . -t docker_trainer:latest
 
 ## Run latest docker training image
 docker_run_trainer:
-	docker run -e WANDB_API_KEY=a009ef7ac8f8292a33c66a257ee94ec14d28d959 --name experiment1 trainer:latest
+	@echo "Name of docker run instance: "; \
+    read NAME; \
+	docker run -e WANDB_API_KEY=a009ef7ac8f8292a33c66a257ee94ec14d28d959 --name $$NAME -v $(pwd)/models/:/models/ docker_trainer:latest
 
 
 
