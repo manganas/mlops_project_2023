@@ -23,4 +23,4 @@ hyperparameters:
   n_valid_datapoints: 500
 
 names:
-  saved_model_name_prefix: 'checkpoint'
+  saved_model_name_prefix: 'exp1_checkpoint'

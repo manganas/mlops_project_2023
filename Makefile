@@ -46,6 +46,13 @@ clean:
 lint:
 	flake8 src
 
+<<<<<<< HEAD
+=======
+## Profile using cProfile and snakeviz for visualization
+profile:
+	$(PYTHON_INTERPRETER) -m cProfile -o cProfile_file.prof
+
+>>>>>>> a43baf1a7a196ed49c598654ac47e8d90444fedd
 ## Build training docker image
 docker_training_image:
 	docker build -f trainer.dockerfile . -t docker_trainer:latest

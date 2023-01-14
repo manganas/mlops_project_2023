@@ -1,0 +1,30 @@
+#exp1.yaml
+
+dirs:
+  input_path: ${hydra:runtime.cwd}/data/raw
+  output_path: ${hydra:runtime.cwd}/data/processed
+  feature_extractor: ${hydra:runtime.cwd}/models/feature_extractor
+  saved_models_dir: ${hydra:runtime.cwd}/models/saved_models
+  saved_weights_dir: ${hydra:runtime.cwd}/models/saved_weights
+
+
+hyperparameters:
+  pretrained_feature_extractor: google/vit-base-patch16-224-in21k
+  batch_size: 8
+  num_workers: 4
+  lr: 1e-3
+  epochs: 10
+  precision: 16
+  num_devices: 1
+  gpu: True
+  seed: 1337
+  save_per_epochs: 1
+  n_train_datapoints: 1000
+  n_valid_datapoints: 500
+
+names:
+<<<<<<< HEAD:src/conf/config.yaml
+  saved_model_name_prefix: 'checkpoint'
+=======
+  saved_model_name_prefix: 'exp1_checkpoint'
+>>>>>>> Config_Files:src/models/conf/experiment/exp1.yaml
