@@ -16,17 +16,12 @@ from transformers import AutoFeatureExtractor
 
 class BirdsDataset:
     def __init__(
-        self,
-        input_filepath: str,
-        output_filepath: str,
-        data_type: str,
-        feature_extractor: AutoFeatureExtractor,
+        self, input_filepath: str, output_filepath: str, data_type: str
     ) -> None:
 
         self.input_filepath = input_filepath
         self.output_filepath = output_filepath
         self.data_type = data_type
-        self.feature_extractor = feature_extractor
 
         # Create the output save folder if it does not yet exist. Optional now with load_dataset
         Path(output_filepath).mkdir(exist_ok=True, parents=True)
@@ -40,13 +35,13 @@ class BirdsDataset:
         self.num_classes = len(self.__data__["train"].features["label"].names)
 
         labels = self.__data__["train"].features["label"].names
-        label2id, id2label = dict(), dict()
+        self.label2id, id2label = dict(), dict()
         for i, label in enumerate(labels):
-            label2id[label] = i
+            self.label2id[label] = i
             id2label[i] = label
 
         if data_type.lower().strip() == "train":
-            self.save_labels_ids(label2id, "label2id")
+            self.save_labels_ids(self.label2id, "label2id")
             self.save_labels_ids(id2label, "id2label")
 
     def get_data(self) -> Dataset:
@@ -58,7 +53,7 @@ class BirdsDataset:
             pickle.dump(labels_ids, f)
 
 
-@hydra.main(config_path="conf", config_name="config.yaml")
+@hydra.main(config_path="../models/conf", config_name="config.yaml")
 def main(cfg) -> None:
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
@@ -66,24 +61,24 @@ def main(cfg) -> None:
     logger = logging.getLogger(__name__)
     logger.info("making final data set from raw data")
 
-    input_filepath = cfg.dirs.input_path
-    output_filepath = cfg.dirs.output_path
-    pretrained_feature_extractor = cfg.hyperparameters.pretrained_feature_extractor
-    feature_extractor_cache_dir = cfg.dirs.feature_extractor
+    input_filepath = cfg.experiment.dirs.input_path
+    output_filepath = cfg.experiment.dirs.output_path
+    # pretrained_feature_extractor = cfg.hyperparameters.pretrained_feature_extractor
+    # feature_extractor_cache_dir = cfg.dirs.feature_extractor
 
     # Because it is needed in the dataset contrsuctor
-    feature_extractor = AutoFeatureExtractor.from_pretrained(
-        pretrained_feature_extractor, cache_dir=feature_extractor_cache_dir
-    )
+    # feature_extractor = AutoFeatureExtractor.from_pretrained(
+    #     pretrained_feature_extractor, cache_dir=feature_extractor_cache_dir
+    # )
 
     # Prepare train dataset
-    _ = BirdsDataset(input_filepath, output_filepath, "train", feature_extractor)
+    _ = BirdsDataset(input_filepath, output_filepath, "train")
 
     # Prepare validation dataset
-    _ = BirdsDataset(input_filepath, output_filepath, "valid", feature_extractor)
+    _ = BirdsDataset(input_filepath, output_filepath, "valid")
 
     # Prepare test dataset
-    _ = BirdsDataset(input_filepath, output_filepath, "test", feature_extractor)
+    _ = BirdsDataset(input_filepath, output_filepath, "test")
 
 
 if __name__ == "__main__":
