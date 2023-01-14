@@ -30,33 +30,43 @@ def move_to(x, device: torch.device):
     pass
 
 
-@hydra.main(config_path="../conf", config_name="config.yaml")
+@hydra.main(config_path="conf", config_name="config.yaml")
 def main(cfg):
 
     #############
     ## GLOBALS ##
 
     # Directories
+    print(f"configuration Hparams: \n {cfg.experiment.hyperparameters}")
+    print(f"configuration Hoptimizer: \n {cfg.optimizer.Optimizer}")
 
-    data_input_filepath = cfg.dirs.input_path
-    data_output_filepath = cfg.dirs.output_path
-    feature_extractor_cache = cfg.dirs.feature_extractor
+    hparams = cfg.experiment.hyperparameters
+    hoptimizer = cfg.optimizer.Optimizer
+    hdirs = cfg.experiment.dirs
 
-    saved_models_dir = cfg.dirs.saved_models_dir
+    
+    data_input_filepath = hdirs.input_path
+    data_output_filepath = hdirs.output_path
+    feature_extractor_cache = hdirs.feature_extractor
+
+    saved_models_dir = hdirs.saved_models_dir
     Path(saved_models_dir).mkdir(exist_ok=True, parents=True)
-    saved_weights_dir = cfg.dirs.saved_weights_dir
-
+    saved_weights_dir = hdirs.saved_weights_dir
+    
+    
     # Hyperparameters
-    pretrained_model = cfg.hyperparameters.pretrained_feature_extractor
-    lr = cfg.hyperparameters.lr
-    batch_size = cfg.hyperparameters.batch_size
-    epochs = cfg.hyperparameters.epochs
-    gpu = cfg.hyperparameters.gpu
-    save_per_epochs = cfg.hyperparameters.save_per_epochs
-    seed = cfg.hyperparameters.seed
-    n_train_datapoints = cfg.hyperparameters.n_train_datapoints
-    n_valid_datapoints = cfg.hyperparameters.n_valid_datapoints
-
+    print()
+    pretrained_model = hparams.pretrained_feature_extractor
+    lr = hparams.lr
+    batch_size = hparams.batch_size
+    epochs = hparams.epochs
+    gpu = hparams.gpu
+    save_per_epochs = hparams.save_per_epochs
+    seed = hparams.seed
+    n_train_datapoints = hparams.n_train_datapoints
+    n_valid_datapoints = hparams.n_valid_datapoints
+    
+    torch.manual_seed(hparams.seed)
     #############
     #############
 
@@ -127,7 +137,7 @@ def main(cfg):
 
     model_name = pretrained_model.split("/")[-1]
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    optimizer = torch.optim.hoptimizer(model.parameters(), lr=lr)
 
     num_training_steps = epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(
