@@ -15,7 +15,6 @@ hyperparameters:
   lr: 1e-3
   epochs: 2
   precision: 16
-  device: cpu
   num_devices: 1
   gpu: True
   seed: 1337
@@ -24,4 +23,4 @@ hyperparameters:
   n_valid_datapoints: 500
 
 names:
-  saved_model_name_prefix: 'my_model'
+  saved_model_name_prefix: 'checkpoint'
