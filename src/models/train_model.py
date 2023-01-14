@@ -5,8 +5,10 @@ from typing import Dict
 import hydra
 import numpy as np
 import torch
+import torch.nn.functional as F
+
 from datasets import load_metric
-from hydra.core.config_store import ConfigStore
+
 from torch.utils.data import DataLoader
 
 
@@ -16,12 +18,11 @@ from transformers import (
     get_scheduler,
 )
 
-from src.config import BirdsConfig
+
+import wandb
+
 from src.data.make_dataset import BirdsDataset
 from src.models.model import MyClassifier
-
-cs = ConfigStore.instance()
-cs.store("birds_config", node=BirdsConfig)
 
 
 def move_to(x, device: torch.device):
@@ -29,7 +30,7 @@ def move_to(x, device: torch.device):
 
 
 @hydra.main(config_path="../conf", config_name="config.yaml")
-def main(cfg: BirdsConfig):
+def main(cfg):
 
     #############
     ## GLOBALS ##
@@ -49,6 +50,10 @@ def main(cfg: BirdsConfig):
     batch_size = cfg.hyperparameters.batch_size
     epochs = cfg.hyperparameters.epochs
     gpu = cfg.hyperparameters.gpu
+    save_per_epochs = cfg.hyperparameters.save_per_epochs
+    seed = cfg.hyperparameters.seed
+    n_train_datapoints = cfg.hyperparameters.n_train_datapoints
+    n_valid_datapoints = cfg.hyperparameters.n_valid_datapoints
 
     #############
     #############
@@ -57,8 +62,10 @@ def main(cfg: BirdsConfig):
     print(f"Device: {device}")
     device = torch.device(device)
 
-    ## Logic that checks if an already trained model exists!
+    # Init wandb
+    wandb.init()
 
+    # In the dataset class!
     feature_extractor = AutoFeatureExtractor.from_pretrained(
         pretrained_model, cache_dir=feature_extractor_cache
     )
@@ -97,6 +104,11 @@ def main(cfg: BirdsConfig):
     valid_dataset = valid_dataset.rename_column("label", "labels")
     valid_dataset.set_format("torch")
 
+    # train_dataset = train_dataset.shuffle(seed=seed).select(range(n_train_datapoints))
+    # valid_dataset = valid_dataset.shuffle(seed=seed).select(range(n_valid_datapoints))
+
+    # print(f"Length of training dataset: {len(train_dataset)}")
+
     train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size)
     valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=batch_size)
 
@@ -108,6 +120,8 @@ def main(cfg: BirdsConfig):
         feature_extractor_cache=feature_extractor_cache,
         **model_options,
     ).get_model()
+
+    wandb.watch(model, log_freq=100)
 
     model_name = pretrained_model.split("/")[-1]
 
@@ -124,8 +138,10 @@ def main(cfg: BirdsConfig):
     model.to(device)
 
     for epoch in tqdm(range(epochs), desc="Training"):
-        model.train()
+
         running_loss = 0.0
+        accuracy = 0.0
+        model.train()
 
         for batch in tqdm(train_dataloader, desc="Batch", leave=False):
 
@@ -134,6 +150,14 @@ def main(cfg: BirdsConfig):
             batch = {k: v.to(device) for k, v in batch.items()}
 
             y_pred = model(**batch)
+
+            class_pred = torch.argmax(F.softmax(y_pred.logits, dim=1), dim=1)
+
+            is_correct = (
+                class_pred.detach().numpy() == np.array(batch["labels"])
+            ).sum()
+
+            accuracy += is_correct
 
             loss = y_pred.loss
 
@@ -144,6 +168,43 @@ def main(cfg: BirdsConfig):
             running_loss += loss.item()
 
             lr_scheduler.step()
+
+        running_loss /= len(train_dataset)
+        accuracy /= len(train_dataset)
+        wandb.log({"training loss": running_loss})
+        wandb.log({"training accuracy": accuracy})
+
+        print(f"Training Loss: {running_loss}, Training Accuracy: {accuracy}")
+
+        model.eval()
+        running_loss = 0.0
+        accuracy = 0.0
+        with torch.no_grad():
+            for batch in tqdm(valid_dataloader, desc="Validation", leave=False):
+                batch = {k: v.to(device) for k, v in batch.items()}
+
+                y_pred = model(**batch)
+
+                class_pred = torch.argmax(F.softmax(y_pred.logits, dim=1), dim=1)
+
+                is_correct = (
+                    class_pred.detach().numpy() == np.array(batch["labels"])
+                ).sum()
+
+                accuracy += is_correct
+
+                loss = y_pred.loss
+                running_loss += loss.item()
+
+            running_loss /= len(valid_dataset)
+            accuracy /= len(valid_dataset)
+
+            wandb.log({"validation loss": running_loss})
+            wandb.log({"validation accuracy": accuracy})
+            print(f"Validation Loss: {running_loss}, Validation Accuracy: {accuracy}")
+
+        if epoch % save_per_epochs == 0:
+            torch.save(model, saved_models_dir + f"/checkpoint-{epoch}.pt")
 
 
 if __name__ == "__main__":

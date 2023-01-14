@@ -1,22 +1,16 @@
 import logging
-from pathlib import Path
 from typing import List
 
+
 from src.models.model import MyClassifier
-from src.config import BirdsConfig
+
 
 from transformers import AutoFeatureExtractor
 
 
-from torchvision.datasets import ImageFolder
-
 from PIL import Image
 
 import hydra
-from hydra.core.config_store import ConfigStore
-
-cs = ConfigStore.instance()
-cs.store("birds_config", node=BirdsConfig)
 
 
 def get_images_from_paths(image_paths: List[str]):
@@ -48,7 +42,7 @@ def get_images_from_paths(image_paths: List[str]):
 
 
 @hydra.main(config_path="../conf", config_name="config.yaml")
-def main(cfg: BirdsConfig):
+def main(cfg):
 
     ## Globals
 

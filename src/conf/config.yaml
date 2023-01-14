@@ -10,15 +10,18 @@ dirs:
 
 hyperparameters:
   pretrained_feature_extractor: google/vit-base-patch16-224-in21k
-  batch_size: 64
+  batch_size: 32
   num_workers: 4
   lr: 1e-3
-  epochs: 1
+  epochs: 2
   precision: 16
   device: cpu
   num_devices: 1
   gpu: True
   seed: 1337
+  save_per_epochs: 1
+  n_train_datapoints: 1000
+  n_valid_datapoints: 500
 
 names:
   saved_model_name_prefix: 'my_model'
