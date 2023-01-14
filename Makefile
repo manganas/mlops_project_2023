@@ -31,6 +31,10 @@ data: requirements
 
 ## Train model
 train:
+	@echo "Name of experiment: "; \
+	read EXP; \
+	echo "Name of optimizer:  "; \
+	read OPT; \
 	$(PYTHON_INTERPRETER) src/models/train_model.py
 
 ## Run predictions on test images
@@ -56,7 +60,6 @@ docker_run_trainer:
 	@echo "Name of docker run instance: "; \
     read NAME; \
 	docker run -e WANDB_API_KEY=a009ef7ac8f8292a33c66a257ee94ec14d28d959 --name $$NAME -v $(pwd)/models/:/models/ docker_trainer:latest
-
 
 
 ## Upload Data to S3
