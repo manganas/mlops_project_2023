@@ -62,7 +62,7 @@ docker_run_trainer:
 
 ## Build training docker image GPU
 gpu_docker_training_image:
-	docker build -f trainer.dockerfile . -t gpu_docker_trainer:latest
+	docker build -f gpu_trainer.dockerfile . -t gpu_docker_trainer:latest
 
 ## Run latest docker training image GPU
 gpu_docker_run_trainer:
@@ -70,7 +70,15 @@ gpu_docker_run_trainer:
     read NAME; \
 	docker run -e WANDB_API_KEY=b1b5623638ce4f864549651f863460a2c4f1c940 --name $$NAME --gpus all -v $(pwd)/models/:/models/ gpu_docker_trainer:latest
 
+## Build predict docker image
+gpu_docker_prediction_image:
+        docker build -f gpu_predictor.dockerfile . -t gpu_docker_predictor:latest
 
+## Run latest docker training image GPU
+gpu_docker_run_predictor:
+        @echo "Name of docker run instance: "; \
+    read NAME; \
+        docker run -e WANDB_API_KEY=b1b5623638ce4f864549651f863460a2c4f1c940 --name $$NAME --gpus all -v $(pwd)/models/:/models/ gpu_docker_predictor:latest
 
 ## Upload Data to S3
 sync_data_to_s3:
