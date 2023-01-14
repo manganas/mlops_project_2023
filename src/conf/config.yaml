@@ -10,7 +10,7 @@ dirs:
 
 hyperparameters:
   pretrained_feature_extractor: google/vit-base-patch16-224-in21k
-  batch_size: 32
+  batch_size: 8
   num_workers: 4
   lr: 1e-3
   epochs: 2

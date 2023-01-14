@@ -154,7 +154,7 @@ def main(cfg):
             class_pred = torch.argmax(F.softmax(y_pred.logits, dim=1), dim=1)
 
             is_correct = (
-                class_pred.detach().numpy() == np.array(batch["labels"])
+                class_pred.detach().cpu().numpy() == np.array(batch["labels"].cpu())
             ).sum()
 
             accuracy += is_correct
@@ -188,7 +188,7 @@ def main(cfg):
                 class_pred = torch.argmax(F.softmax(y_pred.logits, dim=1), dim=1)
 
                 is_correct = (
-                    class_pred.detach().numpy() == np.array(batch["labels"])
+                    class_pred.detach().cpu().numpy() == np.array(batch["labels"].cpu())
                 ).sum()
 
                 accuracy += is_correct
