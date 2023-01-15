@@ -1,4 +1,4 @@
-from tests import _PATH_DATA, _PROJECT_ROOT
+from tests import _PATH_DATA, _PROJECT_ROOT, _TEST_ROOT
 import pytest
 import os
 import torch
@@ -13,14 +13,16 @@ from src.models.train_model import prepare_dataloader
 
 from PIL import Image
 
+mock_dataset = _TEST_ROOT + "/test_dataset"
+
 
 @pytest.mark.skipif(
-    not os.path.exists(_PATH_DATA + "/raw"), reason="Data files not found"
+    not os.path.exists(mock_dataset + "/raw"), reason="Data files not found"
 )
 @pytest.fixture(scope="module")
 def dataset():
     valid_dataset_ = BirdsDataset(
-        _PATH_DATA + "/raw", _PATH_DATA + "/processed/train", "train"
+        mock_dataset + "/raw", mock_dataset + "/processed/train", "train"
     )
     return valid_dataset_
 
@@ -43,7 +45,11 @@ def feature_extractor():
 
 
 @pytest.mark.skipif(
-    not os.path.exists(_PATH_DATA + "/raw"), reason="Data files not found"
+    not os.path.exists(mock_dataset + "/raw"), reason="Data files not found"
+)
+@pytest.mark.skipif(
+    not os.path.exists(_PROJECT_ROOT + "/models/feature_extractor"),
+    reason="Data files not found",
 )
 @pytest.mark.parametrize(
     "batch_size, num_workers, shuffle",
