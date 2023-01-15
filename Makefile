@@ -25,6 +25,10 @@ requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
 
+## Install test requirements
+requirements_test:
+	$(PYTHON_INTERPRETER) -m pip install -r requirements_tests.txt
+
 ## Make Dataset
 data: requirements
 	$(PYTHON_INTERPRETER) src/data/make_dataset.py
@@ -49,6 +53,10 @@ lint:
 ## Profile using cProfile and snakeviz for visualization
 profile:
 	$(PYTHON_INTERPRETER) -m cProfile -o cProfile_file.prof
+
+# Run tests
+run_tests: requirements_test
+	pytest tests/
 
 ## Build training docker image
 docker_training_image:
