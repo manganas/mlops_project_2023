@@ -1,4 +1,4 @@
-name: "Run unit tests"
+name: "Build Cache"
 
 on:
   push:
@@ -19,7 +19,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.9"]
-        #pytorch-version: ["1.11.0", "1.12.0"]
 
     steps:
     - name: Checkout
@@ -38,7 +37,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
-        key: ${{ matrix.os }}-py${{ matrix.python-version }}-pt${{ matrix.pytorch-version }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ matrix.os }}-py${{ matrix.python-version }}-pt${{ matrix.pytorch-version }}-pip-${{ hashFiles('**/requirements_gh_cache.txt') }}
         restore-keys: |
           ${{ matrix.os }}-py${{ matrix.python-version }}-pt${{ matrix.pytorch-version }}-pip-
     - name: Install dependencies
@@ -46,8 +45,4 @@ jobs:
         python -m pip install --upgrade pip        
         pip install -r requirements_gh_cache.txt
         pip install -r requirements.txt
-        pip install -r requirementstests.txt
-
-    - name: Test with pytest
-      run: |
-        pytest -v
+        pip install -r requirements_tests.txt
