@@ -26,8 +26,15 @@ from src.data.make_dataset import BirdsDataset
 from src.models.model import MyClassifier
 
 
-def move_to(x, device: torch.device):
-    pass
+def prepare_dataloader(dataset, feature_extractor, kwargs):
+    def tokenize_function(examples) -> Dict:
+        return feature_extractor(examples["image"])
+
+    dataset = dataset.map(tokenize_function, batched=True)
+    dataset = dataset.remove_columns(["image"])
+    dataset = dataset.rename_column("label", "labels")
+    dataset.set_format("torch")
+    return DataLoader(dataset, **kwargs)
 
 
 @hydra.main(config_path="conf", config_name="config.yaml")
@@ -88,7 +95,6 @@ def main(cfg):
         input_filepath=data_input_filepath,
         output_filepath=data_output_filepath,
         data_type="train",
-        feature_extractor=feature_extractor,
     )
 
     train_dataset = train_data.get_data()
@@ -97,33 +103,26 @@ def main(cfg):
         input_filepath=data_input_filepath,
         output_filepath=data_output_filepath,
         data_type="valid",
-        feature_extractor=feature_extractor,
     )
 
     valid_dataset = valid_data.get_data()
 
-    # Get features from the data
+    # Prepare data_loaders
+    train_loader_options = {"shuffle": True, "batch_size": batch_size, "num_workers": 4}
 
-    def tokenize_function(examples) -> Dict:
-        return feature_extractor(examples["image"])
+    train_dataloader = prepare_dataloader(
+        train_dataset, feature_extractor, train_loader_options
+    )
 
-    train_dataset = train_dataset.map(tokenize_function, batched=True)
-    train_dataset = train_dataset.remove_columns(["image"])
-    train_dataset = train_dataset.rename_column("label", "labels")
-    train_dataset.set_format("torch")
+    valid_loader_options = {
+        "shuffle": False,
+        "batch_size": batch_size,
+        "num_workers": 4,
+    }
 
-    valid_dataset = valid_dataset.map(tokenize_function, batched=True)
-    valid_dataset = valid_dataset.remove_columns(["image"])
-    valid_dataset = valid_dataset.rename_column("label", "labels")
-    valid_dataset.set_format("torch")
-
-    # train_dataset = train_dataset.shuffle(seed=seed).select(range(n_train_datapoints))
-    # valid_dataset = valid_dataset.shuffle(seed=seed).select(range(n_valid_datapoints))
-
-    # print(f"Length of training dataset: {len(train_dataset)}")
-
-    train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size)
-    valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=batch_size)
+    valid_dataloader = prepare_dataloader(
+        valid_dataset, feature_extractor, valid_loader_options
+    )
 
     model_options = {"ignore_mismatched_sizes": True}
 

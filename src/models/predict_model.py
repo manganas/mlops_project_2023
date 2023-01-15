@@ -25,23 +25,6 @@ def get_images_from_paths(image_paths: List[str]):
     return images
 
 
-# def get_pretrained(saved_models_path: str, version: int = -1) -> str:
-#     saved_path = Path(saved_models_path)
-#     if not saved_path.is_dir():
-#         return None
-
-#     max = 0
-#     for folder_ in saved_path.glob(f"*/checkpoint-*"):
-#         parts = folder_.parts
-#         c_version = int(parts[-1].split("-")[-1])
-#         if version > 0 and c_version == version:
-#             return "-".join(parts) + f"-{version}"
-#         if version > max:
-#             max = version
-
-#     return max
-
-
 class Predictor:
     def __init__(self, cfg):
 

@@ -6,7 +6,6 @@
 dvc
 dvc[grive]
 wandb
-coverage
 flake8
 
 
