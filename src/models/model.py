@@ -1,6 +1,3 @@
-from typing import Dict
-
-
 from transformers import AutoModelForImageClassification
 
 
@@ -12,8 +9,6 @@ class MyClassifier:
         feature_extractor_cache: str,
         **kwargs,
     ) -> None:
-
-        # id2label = {id: label for (label, id) in label2id.items()}
 
         self._model_ = AutoModelForImageClassification.from_pretrained(
             pretrained_model,
