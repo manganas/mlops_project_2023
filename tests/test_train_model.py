@@ -25,6 +25,10 @@ def dataset():
     return valid_dataset_
 
 
+@pytest.mark.skipif(
+    not os.path.exists(_PROJECT_ROOT + "/models/feature_extractor"),
+    reason="Feature extractor files not found",
+)
 @pytest.fixture(scope="module")
 def feature_extractor():
 
