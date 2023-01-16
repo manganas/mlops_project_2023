@@ -30,13 +30,13 @@ class Predictor:
 
         # Config file contents
         self.pretrained_extractor_name = (
-            cfg.hyperparameters.pretrained_feature_extractor
+            cfg.experiment.hyperparameters.pretrained_feature_extractor
         )
-        self.feature_extractor_cache = cfg.dirs.feature_extractor
-        self.saved_models_dir = cfg.dirs.saved_models_dir
-        data_output_dir = cfg.dirs.output_path
-        gpu = cfg.hyperparameters.gpu
-        self.saved_prefix = cfg.names.saved_model_name_prefix
+        self.feature_extractor_cache = cfg.experiment.dirs.feature_extractor
+        self.saved_models_dir = cfg.experiment.dirs.saved_models_dir
+        data_output_dir = cfg.experiment.dirs.output_path
+        gpu = cfg.experiment.hyperparameters.gpu
+        self.saved_prefix = cfg.experiment.names.saved_model_name_prefix
 
         self.device = torch.device(
             "cuda" if (gpu and torch.cuda.is_available()) else "cpu"
@@ -126,7 +126,7 @@ def main(cfg):
     # # Otherwise, instantiate a new from the default feature extractor
     # # and hope for the best
 
-    test_dir = Path(cfg.dirs.input_path)
+    test_dir = Path(cfg.experiment.dirs.input_path)
     images_to_test = test_dir.glob("test/**/*.jpg")
 
     predictor = Predictor(cfg)
