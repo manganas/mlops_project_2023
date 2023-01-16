@@ -125,6 +125,7 @@ def main(cfg):
     # # Load model: If a checkpoint is found, find the latest version.
     # # Otherwise, instantiate a new from the default feature extractor
     # # and hope for the best
+    
 
     test_dir = Path(cfg.experiment.dirs.input_path)
     images_to_test = test_dir.glob("test/**/*.jpg")
