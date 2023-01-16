@@ -5,6 +5,7 @@
 
 dvc
 dvc[grive]
+dvc_gs
 wandb
 flake8
 
