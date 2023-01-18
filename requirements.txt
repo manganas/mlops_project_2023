@@ -4,8 +4,8 @@
 # external requirements
 
 dvc
-dvc[grive]
-dvc_gs
+dvc[gdrive]
+dvc[gs]
 wandb
 flake8
 
