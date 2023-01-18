@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
+import pickle
 from pathlib import Path
 from typing import Dict
-import pickle
 
 import hydra
 from datasets import load_dataset
 from dotenv import find_dotenv, load_dotenv
-
 from torch.utils.data import Dataset
-
-
 from transformers import AutoFeatureExtractor
 
 

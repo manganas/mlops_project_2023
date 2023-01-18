@@ -88,6 +88,29 @@ gpu_docker_run_predictor:
 	read NAME; \
 	docker run -e WANDB_API_KEY=b1b5623638ce4f864549651f863460a2c4f1c940 --name $$NAME --gpus all -v $(pwd)/models/:/models/ gpu_docker_predictor:latest
 
+
+
+### Not very usefule, but good to have
+uninstall_pre_commit:
+	pip install pre-commit \
+	&& pre-commit uninstall -t pre-commit -t pre-merge-commit -t pre-push -t prepare-commit-msg -t commit-msg -t post-commit -t post-checkout -t post-merge -t post-rewrite \
+	&& pip uninstall pre-commit -y
+
+
+
+## Make docker image for local app testing
+docker_app_image:
+	docker build -f docker/local_app.dockerfile . -t local_app
+
+run_app_container:
+	docker run --name docker_app -p 80:80 local_app
+
+docker_build_and_push_app:
+	docker build -f docker/google_cloud_app.dockerfile . -t cloud_app
+	docker tag cloud_app gcr.io/pelagic-river-374308/cloud_app
+	docker push gcr.io/pelagic-river-374308/cloud_app
+
+
 ## Upload Data to S3
 sync_data_to_s3:
 ifeq (default,$(PROFILE))

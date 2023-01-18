@@ -1,8 +1,10 @@
-from tests import _PATH_DATA, _PROJECT_ROOT, _TEST_ROOT
-import pytest
 import os
-from src.data.make_dataset import BirdsDataset
 from pathlib import Path
+
+import pytest
+
+from src.data.make_dataset import BirdsDataset
+from tests import _PATH_DATA, _PROJECT_ROOT, _TEST_ROOT
 
 mock_dataset = _TEST_ROOT + "/test_dataset"
 

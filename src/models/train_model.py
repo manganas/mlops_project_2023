@@ -1,26 +1,16 @@
 import logging
 from pathlib import Path
-
 from typing import Dict
 
 import hydra
 import numpy as np
 import torch
 import torch.nn.functional as F
-
-from datasets import load_metric
-
-from torch.utils.data import DataLoader
-
-
-from tqdm import tqdm
-from transformers import (
-    AutoFeatureExtractor,
-    get_scheduler,
-)
-
-
 import wandb
+from datasets import load_metric
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+from transformers import AutoFeatureExtractor, get_scheduler
 
 from src.data.make_dataset import BirdsDataset
 from src.models.model import MyClassifier
@@ -221,9 +211,12 @@ def main(cfg):
             print(f"Validation Loss: {running_loss}, Validation Accuracy: {accuracy}")
 
         if epoch % save_per_epochs == 0:
-            torch.save(
-                model, saved_models_dir + f"/{saved_model_name_prefix}-{epoch}.pt"
-            )
+            # torch.save(
+            #     model, saved_models_dir + f"/{saved_model_name_prefix}-{epoch}.pt"
+            # )
+            torch.save(model, saved_models_dir + f"/{saved_model_name_prefix}.pt")
+
+    torch.save(feature_extractor, saved_models_dir + f"/feature_extractor.pt")
 
 
 if __name__ == "__main__":
