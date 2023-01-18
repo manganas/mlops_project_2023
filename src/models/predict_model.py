@@ -1,17 +1,14 @@
 import logging
-from typing import List
+import pickle
 from pathlib import Path
-
-from src.models.model import MyClassifier
-
-
-from transformers import AutoFeatureExtractor
-import torch
-
-from PIL import Image
+from typing import List
 
 import hydra
-import pickle
+import torch
+from PIL import Image
+from transformers import AutoFeatureExtractor
+
+from src.models.model import MyClassifier
 
 
 def get_images_from_paths(image_paths: List[str]):
@@ -125,7 +122,7 @@ def main(cfg):
     # # Load model: If a checkpoint is found, find the latest version.
     # # Otherwise, instantiate a new from the default feature extractor
     # # and hope for the best
-    
+
 
     test_dir = Path(cfg.experiment.dirs.input_path)
     images_to_test = test_dir.glob("test/**/*.jpg")

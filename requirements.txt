@@ -2,9 +2,10 @@
 -e .
 
 # external requirements
-
+uvicorn
 dvc
 dvc[gdrive]
+
 dvc[gs]
 wandb
 flake8
@@ -31,7 +32,9 @@ tqdm==4.64.1
 
 
 
-
+fastapi==0.89.1
+opencv_python==4.7.0.68
+pydantic==1.10.4
 
 
 

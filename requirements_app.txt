@@ -1,0 +1,10 @@
+uvicorn
+
+fastapi==0.89.1
+pydantic==1.10.4
+python-multipart==0.0.5
+
+numpy==1.24.1
+Pillow==9.4.0
+torch==1.13.0
+transformers

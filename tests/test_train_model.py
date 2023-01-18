@@ -1,17 +1,16 @@
-from tests import _PATH_DATA, _PROJECT_ROOT, _TEST_ROOT
-import pytest
 import os
-import torch
-from torch.utils.data import DataLoader
-
 from typing import Dict
-from transformers import AutoFeatureExtractor, AutoModelForImageClassification
+
 import numpy as np
+import pytest
+import torch
+from PIL import Image
+from torch.utils.data import DataLoader
+from transformers import AutoFeatureExtractor, AutoModelForImageClassification
+
 from src.data.make_dataset import BirdsDataset
 from src.models.train_model import prepare_dataloader
-
-
-from PIL import Image
+from tests import _PATH_DATA, _PROJECT_ROOT, _TEST_ROOT
 
 mock_dataset = _TEST_ROOT + "/test_dataset"
 
