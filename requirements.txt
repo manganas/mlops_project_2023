@@ -21,7 +21,7 @@ torch==1.13.0
 
 torchmetrics==0.11.0
 transformers==4.24.0
-
+torchvision
 
 hydra-core
 
@@ -36,8 +36,3 @@ fastapi==0.89.1
 opencv_python==4.7.0.68
 pydantic==1.10.4
 python-multipart==0.0.5
-
-
-
-
-
