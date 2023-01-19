@@ -15,6 +15,8 @@ from transformers import AutoFeatureExtractor, get_scheduler
 from src.data.make_dataset import BirdsDataset
 from src.models.model import MyClassifier
 
+from torchvision.utils import make_grid
+
 
 def prepare_dataloader(dataset, feature_extractor, kwargs):
     def tokenize_function(examples) -> Dict:
@@ -73,7 +75,7 @@ def main(cfg):
     device = torch.device(device)
 
     # Init wandb
-    wandb.init()
+    wandb.init(entity="team31", project="full_training")
 
     # In the dataset class!
     feature_extractor = AutoFeatureExtractor.from_pretrained(
@@ -215,8 +217,6 @@ def main(cfg):
             #     model, saved_models_dir + f"/{saved_model_name_prefix}-{epoch}.pt"
             # )
             torch.save(model, saved_models_dir + f"/{saved_model_name_prefix}.pt")
-
-    torch.save(feature_extractor, saved_models_dir + f"/feature_extractor.pt")
 
 
 if __name__ == "__main__":
