@@ -16,15 +16,130 @@ from src.data.make_dataset import BirdsDataset
 from src.models.model import MyClassifier
 
 
-def prepare_dataloader(dataset, feature_extractor, kwargs):
-    def tokenize_function(examples) -> Dict:
-        return feature_extractor(examples["image"])
+# def train_network(
+#     model,
+#     optimizer,
+#     train_dataloader,
+#     valid_dataloader=None,
+#     epochs="10",
+#     device="cpu",
+#     save_dir=None,
+# ):
 
-    dataset = dataset.map(tokenize_function, batched=True)
-    dataset = dataset.remove_columns(["image"])
-    dataset = dataset.rename_column("label", "labels")
-    dataset.set_format("torch")
-    return DataLoader(dataset, **kwargs)
+#     to_track = ["training_loss", "training_accuracy"]
+#     if valid_dataloader is not None:
+#         to_track.append("validation_loss")
+#         to_track.append("validation_accuracy")
+
+#     results = {}
+
+#     for item in to_track:
+#         results[item] = []
+
+#     model.to(device)
+#     for epoch in tqdm(range(epochs), desc="Epoch"):
+#         model = model.train()
+
+#         batch = run_epoch(
+#             model,
+#             optimizer,
+#             train_dataloader,
+#             device,
+#             results,
+#             prefix="train",
+#             desc="Training",
+#         )
+
+#         if valid_dataloader is not None:
+#             model = model.eval()
+#             with torch.no_grad():
+#                 _ = run_epoch(
+#                     model,
+#                     optimizer,
+#                     valid_dataloader,
+#                     device,
+#                     results,
+#                     prefix="test",
+#                     desc="Testing",
+#                 )
+
+#     if save_dir is not None:
+
+#         mdl = torch.jit.trace(model, [batch["pixel_values"]])
+#         torch.jit.save(mdl, save_dir + f"/checkpoint_jit.pt")
+#         torch.save(model, save_dir + f"/checkpoint.pt")
+
+#         torch.save(
+#             {
+#                 "epoch": epoch,
+#                 "model_state_dict": model.state_dict(),
+#                 "optimizer_state_dict": optimizer.state_dict(),
+#                 "results": results,
+#             },
+#             save_dir,
+#         )
+
+#     return
+
+
+# def run_epoch(model, optimizer, data_loader, device, results, desc="Training"):
+#     running_loss = []
+#     y_true = []
+#     y_pred = []
+
+#     for batch in tqdm(data_loader, desc=desc, leave=False):
+
+
+#         batch = {k: v.to(device) for k, v in batch.items()}
+
+#         y_pred = model(**batch)
+
+#         class_pred = torch.argmax(F.softmax(y_pred.logits, dim=1), dim=1)
+
+#         is_correct = (
+#             class_pred.detach().cpu().numpy() == np.array(batch["labels"].cpu())
+#         ).sum()
+
+#         accuracy += is_correct
+
+#         loss = y_pred.loss
+#         running_loss += loss.item()
+
+
+#         y_hat = model(inputs) #this just computed f_Θ(x(i))
+#         # Compute loss.
+#         loss = loss_func(y_hat, labels)
+
+#         if model.training:
+#             loss.backward()
+#             optimizer.step()
+#             optimizer.zero_grad()
+
+#         #Now we are just grabbing some information we would like to have
+#         running_loss.append(loss.item())
+
+#         if len(score_funcs) > 0 and isinstance(labels, torch.Tensor):
+#             #moving labels & predictions back to CPU for computing / storing predictions
+#             labels = labels.detach().cpu().numpy()
+#             y_hat = y_hat.detach().cpu().numpy()
+#             #add to predictions so far
+#             y_true.extend(labels.tolist())
+#             y_pred.extend(y_hat.tolist())
+#     #end training epoch
+#     end = time.time()
+
+#     y_pred = np.asarray(y_pred)
+#     if len(y_pred.shape) == 2 and y_pred.shape[1] > 1: #We have a classification problem, convert to labels
+#         y_pred = np.argmax(y_pred, axis=1)
+#     #Else, we assume we are working on a regression problem
+
+#     results[prefix + " loss"].append( np.mean(running_loss) )
+#     for name, score_func in score_funcs.items():
+#         try:
+#             results[prefix + " " + name].append( score_func(y_true, y_pred) )
+#         except:
+#             results[prefix + " " + name].append(float("NaN"))
+#     return end-start #time spent on epoch
 
 
 @hydra.main(config_path="conf", config_name="config.yaml")
@@ -85,24 +200,26 @@ def main(cfg):
         input_filepath=data_input_filepath,
         output_filepath=data_output_filepath,
         data_type="train",
+        feature_extractor_object=feature_extractor,
     )
 
-    train_dataset = train_data.get_data()
+    # train_dataset = train_data.get_data()
 
     valid_data = BirdsDataset(
         input_filepath=data_input_filepath,
         output_filepath=data_output_filepath,
         data_type="valid",
+        feature_extractor_object=feature_extractor,
     )
 
-    valid_dataset = valid_data.get_data()
+    # valid_dataset = valid_data.get_data()
 
     # Prepare data_loaders
     train_loader_options = {"shuffle": True, "batch_size": batch_size, "num_workers": 4}
 
-    train_dataloader = prepare_dataloader(
-        train_dataset, feature_extractor, train_loader_options
-    )
+    # train_dataloader = prepare_dataloader(
+    #     train_dataset, feature_extractor, train_loader_options
+    # )
 
     valid_loader_options = {
         "shuffle": False,
@@ -110,9 +227,12 @@ def main(cfg):
         "num_workers": 4,
     }
 
-    valid_dataloader = prepare_dataloader(
-        valid_dataset, feature_extractor, valid_loader_options
-    )
+    # valid_dataloader = prepare_dataloader(
+    #     valid_dataset, feature_extractor, valid_loader_options
+    # )
+
+    train_dataloader = DataLoader(train_data, **train_loader_options)
+    valid_dataloader = DataLoader(valid_data, **valid_loader_options)
 
     model_options = {"ignore_mismatched_sizes": True}
 
@@ -152,6 +272,8 @@ def main(cfg):
 
         for batch in tqdm(train_dataloader, desc="Batch", leave=False):
 
+            batch["pixel_values"] = torch.squeeze(batch["pixel_values"], 1)
+
             optimizer.zero_grad()
 
             batch = {k: v.to(device) for k, v in batch.items()}
@@ -176,8 +298,8 @@ def main(cfg):
 
             lr_scheduler.step()
 
-        running_loss /= len(train_dataset)
-        accuracy /= len(train_dataset)
+        running_loss /= len(train_dataloader)
+        accuracy /= len(train_dataloader)
         wandb.log({"training loss": running_loss})
         wandb.log({"training accuracy": accuracy})
 
@@ -203,8 +325,8 @@ def main(cfg):
                 loss = y_pred.loss
                 running_loss += loss.item()
 
-            running_loss /= len(valid_dataset)
-            accuracy /= len(valid_dataset)
+            running_loss /= len(valid_dataloader)
+            accuracy /= len(valid_dataloader)
 
             wandb.log({"validation loss": running_loss})
             wandb.log({"validation accuracy": accuracy})
@@ -214,6 +336,8 @@ def main(cfg):
             # torch.save(
             #     model, saved_models_dir + f"/{saved_model_name_prefix}-{epoch}.pt"
             # )
+            mdl = torch.jit.trace(model, [batch["pixel_values"]])
+            torch.jit.save(mdl, saved_models_dir + f"/{saved_model_name_prefix}_jit.pt")
             torch.save(model, saved_models_dir + f"/{saved_model_name_prefix}.pt")
 
 
