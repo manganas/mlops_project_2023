@@ -1,6 +1,4 @@
 [core]
     remote = remote_storage
-['remote "storage"']
-    url = gdrive://1Xlb81GbQfMN3U8hIM1iTq-4dhodLteNO
 ['remote "remote_storage"']
     url = gs://birds_bucket/
