@@ -23,7 +23,7 @@ torchmetrics==0.11.0
 transformers==4.24.0
 
 
-hydra-core==1.3.1
+hydra-core
 
 
 datasets==2.7.1
