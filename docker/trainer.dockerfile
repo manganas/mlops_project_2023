@@ -12,7 +12,7 @@ COPY requirements.txt requirements.txt
 COPY data.dvc data.dvc
 COPY setup.py setup.py
 COPY src/ src/
-COPY data/dtumlops-374716-d8e76837973a.json dtumlops-374716-d8e76837973a.json
+COPY dtumlops-374716-d8e76837973a.json dtumlops-374716-d8e76837973a.json
 
 # Set working directory
 WORKDIR /
@@ -23,7 +23,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN dvc init --no-scm
 RUN dvc remote add -d myremote gs://birds_bucket/
 RUN dvc remote modify myremote url gs://birds_bucket/
-#RUN dvc remote modify myremote dtumlops birds_bucket  
+#RUN dvc remote modify myremote dtumlops birds_bucket
 RUN export GOOGLE_APPLICATION_CREDENTIALS='dtumlops-374716-d8e76837973a.json'
 
 RUN dvc pull

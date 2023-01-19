@@ -12,7 +12,7 @@ COPY requirements.txt requirements.txt
 COPY data.dvc data.dvc
 COPY setup.py setup.py
 COPY src/ src/
-COPY data/dtumlops-374716-d8e76837973a.json dtumlops-374716-d8e76837973a.json
+COPY dtumlops-374716-d8e76837973a.json dtumlops-374716-d8e76837973a.json
 
 # Set working directory
 WORKDIR /workspace/
