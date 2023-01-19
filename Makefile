@@ -124,6 +124,11 @@ docker_build_and_push_app:
 	docker tag cloud_app gcr.io/pelagic-river-374308/cloud_app
 	docker push gcr.io/pelagic-river-374308/cloud_app
 
+## Covearge
+coverage:
+	coverage run -m pytest tests/
+	coverage report
+
 
 ## Upload Data to S3
 sync_data_to_s3:
