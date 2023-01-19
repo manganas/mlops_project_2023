@@ -9,14 +9,21 @@ RUN apt update && \
 RUN pip install wandb
 # Copy application essential parts
 COPY requirements.txt requirements.txt
+COPY data.dvc data.dvc
 COPY setup.py setup.py
 COPY src/ src/
-COPY data/ data/
+COPY data/dtumlops-374716-d8e76837973a.json dtumlops-374716-d8e76837973a.json
 
 # Set working directory
 WORKDIR /workspace/
 
 # Run commands
 RUN pip install -r requirements.txt --no-cache-dir
+RUN dvc init --no-scm
+RUN dvc remote add -d myremote gs://birds_bucket/
+RUN dvc remote modify myremote url gs://birds_bucket/
+RUN export GOOGLE_APPLICATION_CREDENTIALS='dtumlops-374716-d8e76837973a.json'
+
+RUN dvc pull
 
 ENTRYPOINT [ "python", "-u", "src/models/train_model.py" ]
