@@ -124,10 +124,26 @@ docker_build_and_push_app:
 	docker tag cloud_app gcr.io/pelagic-river-374308/cloud_app
 	docker push gcr.io/pelagic-river-374308/cloud_app
 
+deploy_app:
+	gcloud run deploy classifier-app --image gcr.io/pelagic-river-374308/cloud_app --platform managed --region europe-west1 --allow-unauthenticated
+
 ## Covearge
 coverage:
 	coverage run -m pytest tests/
 	coverage report
+
+## Create custom-job
+custom_job_cpu:
+	gcloud ai custom-jobs create \
+	--region=europe-west1 \
+	--display-name=test-run-cpu \
+	--config=ai_vertex/config_cpu.yaml
+
+custom_job_gpu:
+	gcloud ai custom-jobs create \
+	--region=europe-west1 \
+	--display-name=test-run-gpu \
+	--config=ai_vertex/config_gpu.yaml
 
 
 ## Upload Data to S3
