@@ -15,8 +15,6 @@ from transformers import AutoFeatureExtractor, get_scheduler
 from src.data.make_dataset import BirdsDataset
 from src.models.model import MyClassifier
 
-from torchvision.utils import make_grid
-
 
 def prepare_dataloader(dataset, feature_extractor, kwargs):
     def tokenize_function(examples) -> Dict:
