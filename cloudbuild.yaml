@@ -1,5 +1,5 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/dtumlops-374716/birds-proj', '.']
+  args: ['build', '-f', 'docker/trainer.dockerfile', '-t', 'gcr.io/pelagic-river-374308/dtumlops', '.']
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/dtumlops-374716/birds-proj']
+  args: ['push', 'gcr.io/dpelagic-river-374308/dtumlops']
