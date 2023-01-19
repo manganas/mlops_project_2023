@@ -2,4 +2,8 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-f', 'docker/trainer.dockerfile', '-t', 'gcr.io/pelagic-river-374308/dtumlops', '.']
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/dpelagic-river-374308/dtumlops']
+  args: ['push', 'gcr.io/pelagic-river-374308/dtumlops']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-f', 'docker/gpu_trainer.dockerfile', '-t', 'gcr.io/pelagic-river-374308/dtumlops_gpu', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/pelagic-river-374308/dtumlops_gpu']
