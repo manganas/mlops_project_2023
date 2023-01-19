@@ -82,9 +82,8 @@ gpu_docker_run_trainer:
     read NAME; \
 	docker run -e WANDB_API_KEY=b1b5623638ce4f864549651f863460a2c4f1c940 --name $$NAME --gpus all -v $(pwd)/models/:/models/ gpu_docker_trainer:latest
 
-
 ## Prediction
-## Build predict docker image
+## Build prediction docker image
 docker_prediction_image:
         docker build -f docker/predictor.dockerfile . -t docker_predictor:latest
 
@@ -94,16 +93,15 @@ docker_run_predictor:
     read NAME; \
         docker run -e WANDB_API_KEY=a009ef7ac8f8292a33c66a257ee94ec14d28d959 --name $$NAME -v $(pwd)/models/:/models/ docker_predictor:latest
 
-## Build predict docker image GPU
+## Build prediction docker image GPU
 gpu_docker_prediction_image:
 	docker build -f docker/gpu_predictor.dockerfile . -t gpu_docker_predictor:latest
 
-## Run latest docker training image GPU
+## Run latest docker prediction image GPU
 gpu_docker_run_predictor:
 	@echo "Name of docker run instance: "; \
 	read NAME; \
 	docker run -e WANDB_API_KEY=b1b5623638ce4f864549651f863460a2c4f1c940 --name $$NAME --gpus all -v $(pwd)/models/:/models/ gpu_docker_predictor:latest
-
 
 
 ### Not very usefule, but good to have
