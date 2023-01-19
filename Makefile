@@ -58,9 +58,13 @@ profile:
 run_tests: requirements_test
 	pytest tests/
 
+
+## Docker
+
+## Training
 ## Build training docker image
 docker_training_image:
-	docker build -f trainer.dockerfile . -t docker_trainer:latest
+	docker build -f docker/trainer.dockerfile . -t docker_trainer:latest
 
 ## Run latest docker training image
 docker_run_trainer:
@@ -70,7 +74,7 @@ docker_run_trainer:
 
 ## Build training docker image GPU
 gpu_docker_training_image:
-	docker build -f trainer.dockerfile . -t gpu_docker_trainer:latest
+	docker build -f docker/gpu_trainer.dockerfile . -t gpu_docker_trainer:latest
 
 ## Run latest docker training image GPU
 gpu_docker_run_trainer:
@@ -78,16 +82,26 @@ gpu_docker_run_trainer:
     read NAME; \
 	docker run -e WANDB_API_KEY=b1b5623638ce4f864549651f863460a2c4f1c940 --name $$NAME --gpus all -v $(pwd)/models/:/models/ gpu_docker_trainer:latest
 
-## Build predict docker image
-gpu_docker_prediction_image:
-	docker build -f predictor.dockerfile . -t gpu_docker_predictor:latest
+## Prediction
+## Build prediction docker image
+docker_prediction_image:
+        docker build -f docker/predictor.dockerfile . -t docker_predictor:latest
 
-## Run latest docker training image GPU
+## Run latest docker prediction image
+docker_run_predictor:
+        @echo "Name of docker run instance: "; \
+    read NAME; \
+        docker run -e WANDB_API_KEY=a009ef7ac8f8292a33c66a257ee94ec14d28d959 --name $$NAME -v $(pwd)/models/:/models/ docker_predictor:latest
+
+## Build prediction docker image GPU
+gpu_docker_prediction_image:
+	docker build -f docker/gpu_predictor.dockerfile . -t gpu_docker_predictor:latest
+
+## Run latest docker prediction image GPU
 gpu_docker_run_predictor:
 	@echo "Name of docker run instance: "; \
 	read NAME; \
 	docker run -e WANDB_API_KEY=b1b5623638ce4f864549651f863460a2c4f1c940 --name $$NAME --gpus all -v $(pwd)/models/:/models/ gpu_docker_predictor:latest
-
 
 
 ### Not very usefule, but good to have
@@ -109,6 +123,11 @@ docker_build_and_push_app:
 	docker build -f docker/google_cloud_app.dockerfile . -t cloud_app
 	docker tag cloud_app gcr.io/pelagic-river-374308/cloud_app
 	docker push gcr.io/pelagic-river-374308/cloud_app
+
+## Covearge
+coverage:
+	coverage run -m pytest tests/
+	coverage report
 
 
 ## Upload Data to S3

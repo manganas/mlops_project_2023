@@ -5,24 +5,27 @@ FROM python:3.9-slim
 RUN apt update && \
     apt install --no-install-recommends -y build-essential gcc && \
     apt clean && rm -rf /var/lib/apt/lists/* \
-    apt install git
 
 RUN pip install wandb
 # Copy application essential parts
 COPY requirements.txt requirements.txt
 COPY data.dvc data.dvc
-COPY .dvc .dvc
 COPY setup.py setup.py
 COPY src/ src/
-COPY data/ data/
+COPY data/dtumlops-374716-d8e76837973a.json dtumlops-374716-d8e76837973a.json
 
 # Set working directory
 WORKDIR /
 
 # Run commands
 RUN pip install -r requirements.txt --no-cache-dir
+#RUN pip install dvc dvc[gs]
+RUN dvc init --no-scm
+RUN dvc remote add -d myremote gs://birds_bucket/
+RUN dvc remote modify myremote url gs://birds_bucket/
+#RUN dvc remote modify myremote dtumlops birds_bucket  
+RUN export GOOGLE_APPLICATION_CREDENTIALS='dtumlops-374716-d8e76837973a.json'
 
-RUN git init
 RUN dvc pull
 
 ENTRYPOINT [ "python", "-u", "src/models/train_model.py" ]
