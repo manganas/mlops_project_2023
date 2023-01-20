@@ -101,7 +101,7 @@ gpu_docker_prediction_image:
 gpu_docker_run_predictor:
 	@echo "Name of docker run instance: "; \
 	read NAME; \
-	docker run -e WANDB_API_KEY=b1b5623638ce4f864549651f863460a2c4f1c940 --name $$NAME --gpus all -v $(pwd)/models/:/models/ gpu_docker_predictor:latest
+	docker run -e WANDB_API_KEY=b1b5623638ce4f864549651f863460a2c4f1c940 --name $$NAME --gpus all -v $(pwd)/models/:/models/ docker_predictor:latest
 
 
 ### Not very usefule, but good to have
@@ -145,22 +145,6 @@ custom_job_gpu:
 	--display-name=test-run-gpu \
 	--config=ai_vertex/config_gpu.yaml
 
-
-## Upload Data to S3
-sync_data_to_s3:
-ifeq (default,$(PROFILE))
-	aws s3 sync data/ s3://$(BUCKET)/data/
-else
-	aws s3 sync data/ s3://$(BUCKET)/data/ --profile $(PROFILE)
-endif
-
-## Download Data from S3
-sync_data_from_s3:
-ifeq (default,$(PROFILE))
-	aws s3 sync s3://$(BUCKET)/data/ data/
-else
-	aws s3 sync s3://$(BUCKET)/data/ data/ --profile $(PROFILE)
-endif
 
 ## Set up python interpreter environment
 create_environment:
