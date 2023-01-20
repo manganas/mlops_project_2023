@@ -7,6 +7,9 @@ RUN apt update && \
     apt clean && rm -rf /var/lib/apt/lists/*
 
 RUN pip install wandb
+
+ENV WANDB_API_KEY=a009ef7ac8f8292a33c66a257ee94ec14d28d959
+
 # Copy application essential parts
 COPY requirements.txt requirements.txt
 COPY data.dvc data.dvc

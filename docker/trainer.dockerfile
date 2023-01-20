@@ -7,6 +7,9 @@ RUN apt update && \
     apt clean && rm -rf /var/lib/apt/lists/* \
 
 RUN pip install wandb
+
+ENV WANDB_API_KEY=a009ef7ac8f8292a33c66a257ee94ec14d28d959
+
 # Copy application essential parts
 COPY requirements.txt requirements.txt
 COPY data.dvc data.dvc
@@ -27,5 +30,7 @@ RUN dvc remote modify myremote url gs://birds_bucket/
 RUN export GOOGLE_APPLICATION_CREDENTIALS='dtumlops-374716-d8e76837973a.json'
 
 RUN dvc pull
+
+
 
 ENTRYPOINT [ "python", "-u", "src/models/train_model.py" ]
