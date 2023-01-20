@@ -101,29 +101,6 @@ class Predictor:
 @hydra.main(config_path="conf", config_name="config.yaml")
 def main(cfg):
 
-    ### Globals
-
-    # # Dirs
-    # data_output_filepath = cfg.dirs.output_path
-    # feature_extractor_cache = cfg.dirs.feature_extractor
-    # saved_models_dir = cfg.dirs.saved_models_dir
-
-    # # Hyperparameters
-    # pretrained_feat_extractor = cfg.hyperparameters.pretrained_feature_extractor
-
-    # # Names
-    # saved_model_name_prefix = cfg.names.saved_model_name_prefix
-
-    # # Initiate feature extractor
-    # feature_extractor = AutoFeatureExtractor.from_pretrained(
-    #     pretrained_feat_extractor, cache_dir=feature_extractor_cache
-    # )
-
-    # # Load model: If a checkpoint is found, find the latest version.
-    # # Otherwise, instantiate a new from the default feature extractor
-    # # and hope for the best
-
-
     test_dir = Path(cfg.experiment.dirs.input_path)
     images_to_test = test_dir.glob("test/**/*.jpg")
 

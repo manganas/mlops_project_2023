@@ -1,13 +1,11 @@
 import logging
 from pathlib import Path
-from typing import Dict
 
 import hydra
 import numpy as np
 import torch
 import torch.nn.functional as F
 import wandb
-from datasets import load_metric
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoFeatureExtractor, get_scheduler
@@ -310,6 +308,7 @@ def main(cfg):
         accuracy = 0.0
         with torch.no_grad():
             for batch in tqdm(valid_dataloader, desc="Validation", leave=False):
+                batch["pixel_values"] = torch.squeeze(batch["pixel_values"], 1)
                 batch = {k: v.to(device) for k, v in batch.items()}
 
                 y_pred = model(**batch)

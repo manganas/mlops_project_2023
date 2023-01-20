@@ -15,8 +15,8 @@ COPY ./requirements_app.txt /code/requirements_app.txt
 RUN pip install --no-cache-dir --upgrade -r /code/requirements_app.txt
 
 COPY ./app /code/app
-COPY ./extra_files /code/extra_files
-
+COPY ./models /code/models
+COPY ./data/processed /code/data/processed
 
 
 # CMD exec uvicorn app.main:app --port 8000 --host 0.0.0.0 --workers 1

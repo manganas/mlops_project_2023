@@ -14,6 +14,7 @@ class MyClassifier:
             pretrained_model,
             num_labels=num_labels,
             cache_dir=feature_extractor_cache,
+            torchscript=True,
             **kwargs,
         )
 
