@@ -9,15 +9,34 @@ on:
 jobs:
   build:
 
-    runs-on: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}  
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.9", "3.10"]
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v2
+      uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
       with:
-        python-version: [3.9, 3.10]
+        python-version: ${{ matrix.python-version }}
+
+    - name: Get pip cache dir
+      id: pip-cache
+      run: |
+        echo "::set-output name=dir::$(pip cache dir)"
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}
+        key: ${{ matrix.os }}-py${{ matrix.python-version }}-pt-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ matrix.os }}-py${{ matrix.python-version }}-pt-pip-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
