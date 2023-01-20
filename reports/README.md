@@ -366,10 +366,7 @@ The training/validation/test dataset class outputs a different number of points 
 
 
 
---- The current code coverage for the dataset code is at 53%, however, testing for the training and prediction code has not been conducted. As a result, it is likely that errors in these areas will go undetected. There are various reasons that can contribute to a project's failure such as incorrect dependencies, improper deployment, lack of permissions, or corrupted data. To ensure the success of the project, it is crucial to pair the analysis with comprehensive and robust test scripts that cover all functional and non-functional areas of the code. These test scripts should be scalable and robust, ensuring that all the aspects of the source code are thoroughly covered.
- ---
-
-
+--- The current code coverage for the dataset code is at 53%, however, testing for the training and prediction code has not been conducted. As a result, it is likely that errors in these areas will go undetected. There are various reasons that can contribute to a project's failure such as incorrect dependencies, improper deployment, lack of permissions, or corrupted data. To ensure the success of the project, it is crucial to pair the analysis with comprehensive and robust test scripts that cover all functional and non-functional areas of the code. These test scripts should be scalable and robust, ensuring that all the aspects of the source code are thoroughly covered. ---
 
 
 ### Question 9
@@ -499,9 +496,7 @@ The training/validation/test dataset class outputs a different number of points 
 
 
 
----
-To ensure reproducibility, we initially added the configuration files in git, so that any changes can be reverted and rolled back. Afterwards, we used configuration files with all the hyperparameters stored. The experiment number that corresponds to each file is saved as prefix to the model checkpoint files. Afterwards, for reproducibility, docker containers were built and run for training and test/inference. We only used one image for Python for faster builds, however we could have used images with different operating systems and/or versions of Python. For the local docker images, the data was copied to the image. For the google cloud triggered builds in Cloud Build, the data were acquired using dvc pull inside the container.
- ---
+---To ensure reproducibility, we initially added the configuration files in git, so that any changes can be reverted and rolled back. Afterwards, we used configuration files with all the hyperparameters stored. The experiment number that corresponds to each file is saved as prefix to the model checkpoint files. Afterwards, for reproducibility, docker containers were built and run for training and test/inference. We only used one image for Python for faster builds, however we could have used images with different operating systems and/or versions of Python. For the local docker images, the data was copied to the image. For the google cloud triggered builds in Cloud Build, the data were acquired using dvc pull inside the container.---
 
 
 
@@ -526,8 +521,9 @@ To ensure reproducibility, we initially added the configuration files in git, so
 
 
 
---- Wandb is a powerful tool that enables us to keep tabs on the performance of our experiments by logging the training and validation set accuracy and losses for each epoch. The tool allows us to easily monitor the progress of our experiments and evaluate their performance. In this particular case, we did not focus on precision and recall as our application is intended for general public use. The loss function we used is CrossEntropy, which is already built into the huggingface model.
-In this ![image](figures/wandb_2.png) we can see two logged experiments. The blue line represents an experiment that was conducted with a larger batch size, a learning rate scheduler, and the Adam optimizer. On the other hand, the purple line at the bottom represents an experiment with a smaller batch size and a fixed learning rate. By plotting the training and validation losses, we were able to ensure that there was no overfitting. The accuracy was used as a metric to evaluate the training performance.
+--- ![image](figures/wandb_2.png) 
+Wandb is a powerful tool that enables us to keep tabs on the performance of our experiments by logging the training and validation set accuracy and losses for each epoch. The tool allows us to easily monitor the progress of our experiments and evaluate their performance. In this particular case, we did not focus on precision and recall as our application is intended for general public use. The loss function we used is CrossEntropy, which is already built into the huggingface model.
+In the image above, we can see two logged experiments. The blue line represents an experiment that was conducted with a larger batch size, a learning rate scheduler, and the Adam optimizer. On the other hand, the purple line at the bottom represents an experiment with a smaller batch size and a fixed learning rate. By plotting the training and validation losses, we were able to ensure that there was no overfitting. The accuracy was used as a metric to evaluate the training performance.
 It's worth noting that running the experiments for more epochs would likely yield better results than what is shown in the current data. This is because more training data would provide the model with more opportunities to learn and improve its performance. Overall, Wandb is a valuable tool that helps us to monitor and evaluate our experiments, making it easier to identify and correct any issues that may arise.---
 
 
@@ -574,15 +570,7 @@ It's worth noting that running the experiments for more epochs would likely yiel
 > Answer:
 
 
-
-
----  For debugging, we mostly used the builtin VSCode debugger, in an interactive GPU mode in the HPC when the GPU was tested. Due to the nature of the code, using a pretrained model, the crash logs were also easy to use to correct the code. Some calls to log.info were also made.
-
-
-Given that the code structure was not overly complex, profiling was only performed as an application of the course. The highest repetition is in the `__getitem__` method of the dataset and the forward method of the model. We did not write custom functions to test if they impact the speed of the code. We used cProfile and snakeviz to see the results of profiling our code. Finally, profiling was added as a command in the Makefile.
----
-
-
+---For debugging, we mostly used the builtin VSCode debugger, in an interactive GPU mode in the HPC when the GPU was tested. Due to the nature of the code, using a pretrained model, the crash logs were also easy to use to correct the code. Some calls to log.info were also made.Given that the code structure was not overly complex, profiling was only performed as an application of the course. The highest repetition is in the `__getitem__` method of the dataset and the forward method of the model. We did not write custom functions to test if they impact the speed of the code. We used cProfile and snakeviz to see the results of profiling our code. Finally, profiling was added as a command in the Makefile.---
 
 
 
@@ -722,8 +710,7 @@ We used custom jobs to train the models from images, which in a sense spawn the 
 
 --- We used the Google service Cloud Run Cloud to deploy a containerized fastapi based application. To test that the app works, the following steps were followed: 1. Local deployment using uvicorn. 2. Local deployment using docker. 3. Tagging and pushing the docker image to gc. Create a new service with the correct amount of RAM and the port specified in the dockerfile of the app. Assuming the user is in a directory with the images to use, run  ```curl -X POST 'https://classifier-app-f-jfaciuiyva-ew.a.run.app/predict' \          
 -F 'data=@2.jpg' ```
-The response is a json file with status code, the predicted class and the probability of the prediction.
----
+The response is a json file with status code, the predicted class and the probability of the prediction.---
 
 
 
@@ -747,13 +734,7 @@ The response is a json file with status code, the predicted class and the probab
 
 
 
---- The only monitoring we created for our project, was through the Monitoring service of Google cloud, to log if the requests are higher than a threshold.
-
-
-
-
-We would like to have monitoring implemented, especially if we could store the requested images from the users in a database. Moreover, the feedback from each inference call could be saved. Monitoring would allow for our app and model the following: 1. Know if, when and with which input our app potentially crashed or did not perform as expected. 2. Detect drift in the input data, so that we are alerted and re-train the model with new data from this distribution. 3. We could also log the performance of our application in terms of time to execute each inference call and possibly profile it if we think there is a bottleneck.
----
+--- The only monitoring we created for our project, was through the Monitoring service of Google cloud, to log if the requests are higher than a threshold. We would like to have monitoring implemented, especially if we could store the requested images from the users in a database. Moreover, the feedback from each inference call could be saved. Monitoring would allow for our app and model the following: 1. Know if, when and with which input our app potentially crashed or did not perform as expected. 2. Detect drift in the input data, so that we are alerted and re-train the model with new data from this distribution. 3. We could also log the performance of our application in terms of time to execute each inference call and possibly profile it if we think there is a bottleneck.---
 
 
 
@@ -776,10 +757,10 @@ We would like to have monitoring implemented, especially if we could store the r
 
 
 
---- s220493: $23.65
-    s223306: $19.12
-    s212441: $49.83
-    s212584: $0
+--- ```s220493: $23.65```
+    ```s223306: $19.12```
+    ```s212441: $49.83```
+    ```s212584: $0```
   The main cost is compute engine due to the VMs with GPU. Especially, in case they are not stopped when they are not used. ---
 
 
@@ -819,10 +800,7 @@ We would like to have monitoring implemented, especially if we could store the r
 --- ![Our overview](figures/our_overview.png) 
 The starting point of the diagram is the pytorch code which includes the contents of the src folder and also modules for the model, training, prediction and datasets. The layout of the whole project follows the cookiecutter layout for data science. Git, distributed version control system, is used for version control and github is used for hosting the remote repository. The data, raw images, is tracked via dvc and stored in a bucket, Google Cloud Storage. 
 Every member contributes to the codebase by pull requests, which must be reviewed and approved by one other member. Every time changes in a branch are committed, pre-commit hooks ensure the format of the code follwing pep8 which ensures nice formatting. After the pull request is accepted and the code merged, the code is tested using github actions on Ubuntu and Windows with Python 3.9 and 3.10 version. Moreover, isort is run and all the unit tests are executed. At the same time, the docker images for training on cpu and gpu are built on Cloud Build. After the build is completed, a cli command begins a vertex ai VM that runs the built images’ containers, to train the model. All the configurations for the code, like model hyperparameters and paths are stored  in the hydra config files. Moreover, the desired logs are initiated to the wandb account by using an api key stored in the docker container. 
-
-
-Finally, when the saved model has been acquired, a fastapi application is built in the folder app. Initially it is tested locally, afterwards, a docker image of the app is built and tested again locally, before it is tagged and pushed to the Container Registry. After the image is built on the Registry, a command launches a new Cloud Run service using the correct port. It is possible then for anyone to send requests to the app. Monitoring sends an email once a day if the mean value of the requests surpasses a threshold of 2.
----
+Finally, when the saved model has been acquired, a fastapi application is built in the folder app. Initially it is tested locally, afterwards, a docker image of the app is built and tested again locally, before it is tagged and pushed to the Container Registry. After the image is built on the Registry, a command launches a new Cloud Run service using the correct port. It is possible then for anyone to send requests to the app. Monitoring sends an email once a day if the mean value of the requests surpasses a threshold of 2.---
 
 
 
@@ -843,27 +821,12 @@ Finally, when the saved model has been acquired, a fastapi application is built 
 > Answer:
 
 
-
-
----
-An initial struggle was to set a model up so that the training works as expected. Moreover, loading the data and storing them in an efficient way was challenging. Initially, we used huggingface’s load_dataset class, which cached all the data. However, when training, it produced a temporary folder of size around 40G that made it difficult to work in the cloud. This was solved by not changing the make_dataset.py file to use torchvision’s ImageFolder class. The data need not be saved as tensors, since `__getitem__` now feeds them as tensors after transforming them.
-
-
+---An initial struggle was to set a model up so that the training works as expected. Moreover, loading the data and storing them in an efficient way was challenging. Initially, we used huggingface’s load_dataset class, which cached all the data. However, when training, it produced a temporary folder of size around 40G that made it difficult to work in the cloud. This was solved by not changing the make_dataset.py file to use torchvision’s ImageFolder class. The data need not be saved as tensors, since `__getitem__` now feeds them as tensors after transforming them.
 Another difficult point was how to use API keys inside docker containers that were built and run on Google Cloud. For the majority of the cases, we directly stored the keys in the dockerfile, which might not be the best solution.  
-
-
 We also run into some cases where the conda src folder could not be installed and classes from different modules be imported into other files. We solved this by creating a new environment from the requirements file.
-
-
 Moreover, we did not manage to run any training using GPU using vertex ai. The gpu images from nvidia kept failing when they were built. Moreover, we did not manage to create a vm with GPU from these images. We used the GPU of the HPC eventually. Training only with CPU was extremely slow, so most instances were stopped and were kept as experiments.  
-
-
 Finally, the Cloud Functions service was not used, since the inference function had large dependencies and was very slow to deploy and edit, so that debugging could be performed. We settled with Cloud Run.
-
-
 API keys inside of containers, uploaded to gc. Getting the model to work and not create a large amount of data, so that dvc pull can be performed online inside the containers. ---
-
-
 
 
 ### Question 27
@@ -883,9 +846,6 @@ API keys inside of containers, uploaded to gc. Getting the model to work and not
 > *All members contributed to code by...*
 >
 > Answer:
-
-
-
 
 --- Student s212441 was in charge of setting up the initial cookie cutter project and developing of the docker containers for training our applications. Student s223306 worked on Parameters with Hydra and DVC. Student s220493 was in charge of training our models in the cloud and deploying them afterwards. Student s212584 contributed on Fast APIs segment. All members contributed to code equally. ---
 
