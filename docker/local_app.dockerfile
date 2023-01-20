@@ -6,6 +6,7 @@ RUN apt-get update
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements_app.txt
 COPY ./app /code/app
-COPY ./extra_files /code/extra_files
+COPY ./models /code/models
+COPY ./data/processed /code/data/processed
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

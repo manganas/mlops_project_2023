@@ -120,12 +120,12 @@ run_app_container:
 	docker run --name docker_app -p 80:80 local_app
 
 docker_build_and_push_app:
-	docker build -f docker/google_cloud_app.dockerfile . -t cloud_app
-	docker tag cloud_app gcr.io/pelagic-river-374308/cloud_app
-	docker push gcr.io/pelagic-river-374308/cloud_app
+	docker build -f docker/google_cloud_app.dockerfile . -t cloud_app_f
+	docker tag cloud_app_f gcr.io/pelagic-river-374308/cloud_app_f
+	docker push gcr.io/pelagic-river-374308/cloud_app_f
 
 deploy_app:
-	gcloud run deploy classifier-app --image gcr.io/pelagic-river-374308/cloud_app --platform managed --region europe-west1 --allow-unauthenticated
+	gcloud run deploy classifier-app-f --image gcr.io/pelagic-river-374308/cloud_app_f --platform managed --region europe-west1 --allow-unauthenticated --port 8000
 
 ## Covearge
 coverage:
